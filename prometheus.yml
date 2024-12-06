@@ -1,0 +1,10 @@
+global:
+  scrape_interval:     10s  # интервал между запросами prometheus
+  evaluation_interval: 10s  # интервал между вычислениями метрик
+
+scrape_configs:
+  - job_name: 'prometheus'
+    scrape_interval:     10s
+    static_configs:
+      - targets:
+        - logistic-package-api:9100

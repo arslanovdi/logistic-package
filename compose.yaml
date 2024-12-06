@@ -1,0 +1,499 @@
+services:
+  logistic-package-api:
+    build:  # сборка из образа контейнера
+      context: .
+      dockerfile: logistic-package-api/Dockerfile
+    restart: unless-stopped
+    logging:
+      driver: 'gelf'
+      options:
+        gelf-address: 'udp://127.0.0.1:12201'
+        tag: logistic-package-api
+    networks:
+      - ompnw
+    depends_on:
+      postgres:
+        condition: service_healthy  # ждем полного запуска Postgres
+      graylog:
+        condition: service_healthy  # ждем полного запуска Graylog
+      jaeger:
+        condition: service_started # ждем полного запуска Jaeger
+      kafka1:
+        condition: service_started  # ждем полного запуска Kafka
+      kafka2:
+        condition: service_started  # ждем полного запуска Kafka
+      kafka3:
+        condition: service_started  # ждем полного запуска Kafka
+      schemaregistry1:
+        condition: service_started  # ждем полного запуска schemaregistry1
+    links:                  # определяет сетевую ссылку на контейнеры в другом сервисе, они не нужны для взаимодействия. Они выражают неявную зависимость между службами и влияют на порядок запуска служб.
+      - postgres
+      - jaeger
+      - kafka1
+      - kafka2
+      - kafka3
+    ports:
+      - "8080:8080"     # REST
+      - "8082:8082"     # gRPC
+      - "9100:9100"     # Metrics prometheus
+      - "8000:8000"     # Status
+    healthcheck:
+      test: [ 'CMD', 'curl', '-f', 'http://localhost:8000/live' ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    volumes:
+      - ./logistic-package-api/migrations:/root/migrations
+      - ./logistic-package-api/config.yml:/root/config.yml
+
+  retranslator: # outbox
+    build: # сборка из образа контейнера
+      context: .
+      dockerfile: Dockerfile_retranslator
+    restart: unless-stopped
+    logging:
+      driver: 'gelf'
+      options:
+        gelf-address: 'udp://127.0.0.1:12201'
+        tag: logistic-package-retranslator
+    networks:
+      - ompnw
+    depends_on:
+      postgres:
+        condition: service_healthy  # ждем полного запуска Postgres
+      graylog:
+        condition: service_healthy  # ждем полного запуска Graylog
+      jaeger:
+        condition: service_started # ждем полного запуска Jaeger
+      kafka1:
+        condition: service_started  # ждем полного запуска Kafka
+      kafka2:
+        condition: service_started  # ждем полного запуска Kafka
+      kafka3:
+        condition: service_started  # ждем полного запуска Kafka
+      logistic-package-api:
+        condition: service_healthy
+    links: # определяет сетевую ссылку на контейнеры в другом сервисе, они не нужны для взаимодействия. Они выражают неявную зависимость между службами и влияют на порядок запуска служб.
+      - postgres
+      - jaeger
+      - kafka1
+      - kafka2
+      - kafka3
+    ports:
+            #- "9100:9100"     # Metrics prometheus
+      - "8000:8000"     # Status
+    healthcheck:
+      test: [ 'CMD', 'curl', '-f', 'http://localhost:8000/live' ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    volumes:
+      - ./logistic-package-api/migrations:/root/migrations
+      - ./logistic-package-api/config.yml:/root/config.yml
+
+  postgres:
+    image: postgres:17.2
+    labels:                           # добавление метаданных в контейнер
+      logistic.package.api: postgres
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "postgres" ]   #  проверки состояния подключения сервера базы данных PostgreSQL: pg_isready -q -d postgres -U postgres
+      interval: 10s
+      timeout: 45s
+      retries: 10
+    restart: unless-stopped
+    logging:                # конфигурация ведения журнала    https://www.squadcast.com/blog/docker-compose-logs
+      driver: gelf
+      options:
+        gelf-address: 'udp://127.0.0.1:12201'
+        tag: postgres
+    ports:
+      - "5432:5432"
+    command: postgres -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all -c max_connections=200
+    environment:
+      POSTGRES_USER: postgres                 # superuser
+      POSTGRES_PASSWORD: postgresTest@123     # superuser password
+      POSTGRES_DB: logistic_package_api       # default DB, created if not exists
+      APP_DB_USER: logistic                   # app user
+      APP_DB_PASS: P@$$$$w0rd                 # app user password
+    networks:
+      - ompnw
+    depends_on:
+      graylog:
+        condition: service_healthy  # ждем полного запуска Graylog
+    volumes:
+      # - pgdata:/var/lib/postgresql/data
+      - ./logistic-package-api/scripts/init-database.sh:/docker-entrypoint-initdb.d/init-database.sh
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    logging:
+      driver: 'gelf'
+      options:
+        gelf-address: 'udp://127.0.0.1:12201'
+        tag: prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - ompnw
+    depends_on:
+      graylog:
+        condition: service_healthy  # ждем полного запуска Graylog
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+
+  grafana:  # default user/password: admin/admin
+    image: grafana/grafana-enterprise #grafana/grafana:latest
+    restart: unless-stopped
+    logging:
+      driver: 'gelf'
+      options:
+        gelf-address: 'udp://127.0.0.1:12201'
+        tag: grafana
+    ports:
+      - "3000:3000"
+    links:
+      - prometheus
+    networks:
+      - ompnw
+    volumes:
+      - "grafana_storage:/var/lib/grafana"
+
+  mongo:
+    image: mongo:7.0.7
+    restart: unless-stopped
+    networks:
+      - ompnw
+    volumes:
+      - mongodata:/data/db
+      - mongodb_configdb:/data/configdb
+
+  opensearch-node:                                    # This is also the hostname of the container within the Docker network (i.e. https://opensearch-node1/)
+    image: opensearchproject/opensearch:latest        # Specifying the latest available image - modify if you want a specific version
+    container_name: opensearch-node
+    environment:
+      discovery.type: single-node
+      bootstrap.memory_lock: "true"                   # Disable JVM heap memory swapping
+      OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m         # Set min and max JVM heap sizes to at least 50% of system RAM
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: "?PassW0rd?" # Sets the demo admin user password when using demo configuration, required for OpenSearch 2.12 and later
+      DISABLE_INSTALL_DEMO_CONFIG: "true"             # Prevents execution of bundled demo script which installs demo certificates and security configurations to OpenSearch
+      DISABLE_SECURITY_PLUGIN: "true"                 # Disables Security plugin
+    ulimits:
+      memlock:
+        soft: -1      # Set memlock to unlimited (no soft or hard limit)
+        hard: -1
+      nofile:
+        soft: 65536   # Maximum number of open files for the opensearch user - set to at least 65536
+        hard: 65536
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data    # Creates volume called opensearch-data1 and mounts it to the container
+    ports:
+      - "9200:9200"   # REST API
+      - "9600:9600"   # Performance Analyzer
+    networks:
+      - ompnw         # All the containers will join the same Docker bridge network
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:latest
+    container_name: opensearch-dashboards
+    restart: unless-stopped
+    ports:
+      - "5601:5601"   # Map host port 5601 to container port 5601
+    expose:
+      - "5601"        # Expose port 5601 for web access to OpenSearch Dashboards
+    environment:
+      OPENSEARCH_HOSTS: '["http://opensearch-node:9200"]'
+      DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true"            # disables security dashboards plugin in OpenSearch Dashboards
+    networks:
+      - ompnw
+    depends_on:
+      opensearch-node:
+        condition: service_started
+
+  graylog:
+    image: graylog/graylog:6.1.3-1
+    restart: unless-stopped
+    volumes:
+      - graylog_data:/usr/share/graylog/data
+      - graylog_plugin:/usr/share/graylog/plugin
+    environment:
+      # CHANGE ME (must be at least 16 characters)!
+      GRAYLOG_PASSWORD_SECRET: somepasswordpepper
+      # Password: admin
+      GRAYLOG_ROOT_PASSWORD_SHA2: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+      GRAYLOG_HTTP_EXTERNAL_URI: http://localhost:9000/
+      GRAYLOG_BIND_ADDRESS: 0.0.0.0:9000
+      GRAYLOG_ELASTICSEARCH_HOSTS: http://opensearch-node:9200
+      GRAYLOG_MONGODB_URI: mongodb://mongo:27017/graylog
+
+    entrypoint: /usr/bin/tini -- wait-for-it opensearch-node:9200 -- /docker-entrypoint.sh
+    networks:
+      - ompnw
+    links:
+      - mongo
+      - opensearch-node
+    depends_on:
+      mongo:
+        condition: service_started
+      opensearch-node:
+        condition: service_started
+    ports:
+      - "9000:9000"       # Graylog web interface and REST API
+      - "1514:1514"       # Syslog TCP
+      - "1514:1514/udp"   # Syslog UDP
+      - "12201:12201"     # GELF TCP
+      - "12201:12201/udp" # GELF UDP
+      - "5044:5044"       # Beats
+
+  jaeger:
+    image: jaegertracing/all-in-one
+    restart: unless-stopped
+    logging:
+      driver: 'gelf'
+      options:
+        gelf-address: 'udp://127.0.0.1:12201'
+        tag: jaeger
+    ports:
+      - "4317:4317"
+      - "6831:6831/udp"
+      - "16686:16686"
+    networks:
+      - ompnw
+    depends_on:
+      graylog:
+        condition: service_healthy
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "9001:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: kafka_examples
+      KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS: kafka1:9091,kafka2:9091,kafka3:9091
+      KAFKA_CLUSTERS_0_METRICS_PORT: 9997
+      KAFKA_CLUSTERS_0_METRICS_TYPE: JMX # JMX or prometheus, default: JMX
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schemaregistry1:8081
+      DYNAMIC_CONFIG_ENABLED: 'true'                                          # позволяет изменять конфиг kafka-ui в реальном времени
+    networks:
+      - ompnw
+    depends_on:
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
+      kafka3:
+        condition: service_healthy
+      schemaregistry1:
+        condition: service_started
+
+  schemaregistry1:
+    image: confluentinc/cp-schema-registry:7.7.1
+    hostname: schemaregistry1
+    container_name: schemaregistry1
+    depends_on:
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
+      kafka3:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schemaregistry1
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka1:9091,kafka2:9091,kafka3:9091'    # список брокеров
+      SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: PLAINTEXT
+      SCHEMA_REGISTRY_LISTENERS: http://schemaregistry1:8081
+      SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: INFO
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC: _schemas                                             # в этом топике хранятся все схемы
+      SCHEMA_REGISTRY_INTER_INSTANCE_PROTOCOL: "http"
+      SCHEMA_REGISTRY_INTER_INSTANCE_LISTENER_NAME: schemaregistry1                          # название слушателя для общения между экземплярами SchemaRegistry
+    networks:
+      - ompnw
+
+  kafka1:
+    container_name: kafka1
+    hostname: kafka1
+    image: confluentinc/cp-kafka:latest
+    restart: unless-stopped
+    logging:
+      driver: 'gelf'
+      options:
+        gelf-address: 'udp://127.0.0.1:12201'
+        tag: kafka1
+    depends_on:
+      graylog:
+        condition: service_healthy
+    ports:
+      - "29092:29092"                                                                  # открываем порт для подключения клиентов, извне контейнера
+    environment:
+      # KAFKA CLUSTER
+      KAFKA_NODE_ID: 1                                                                 # Уникальный идентификатор узла в кластере
+      CLUSTER_ID: HE5uOlWcSg6jiUydVtaRzQ                                               # Генерируем идентификатор кластера: docker compose exec kafka1 kafka-storage.sh random-uuid
+      KAFKA_PROCESS_ROLES: broker,controller                                           # узел может входить в кворум как контроллер и как брокер
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093,2@kafka2:9093,3@kafka3:9093        # список нод, для кворума (здесь нужно перечислить адреса всех известных контроллеров)
+      # LISTENERS
+      KAFKA_LISTENERS: INTERNAL://:9091,CONTROLLER://:9093,EXTERNAL://:29092           # публикуем порты на которые брокер будет принимать сообщения
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://:9091,EXTERNAL://127.0.0.1:29092          # публикуем порты для подключения клиентов
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT   # разрешаем доступ без шифрования и авторизации
+      # BROKER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL                                       # название слушателя для брокера, основная цель - репликация разделов
+      KAFKA_BROKER_ID: 1
+      # CONTROLLER
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER                                      # название слушателя для контроллера
+      # CLIENT
+      KAFKA_CLIENT_LISTENER_NAME: EXTERNAL                                             # название слушателя для клиента
+      # COMMON SETTIGNS
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true                                           # запрещаем автоматическое создание топиков
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9997
+      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka1 -Dcom.sun.management.jmxremote.rmi.port=9997
+      KAFKA_LOG_DIRS: '/tmp/kafka-logs'                                                # default: /tmp/kafka-logs
+    networks:
+      - ompnw
+    volumes:
+      - kafkavolume1:/kafka/data
+    healthcheck:
+      # проверка состояния контейнера. проверка происходит по готовности порта 9091
+      test: "bash -c 'printf \"\" > /dev/tcp/127.0.0.1/9091; exit $$?;'"
+      interval: 5s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  kafka2:
+    container_name: kafka2
+    hostname: kafka2
+    image: confluentinc/cp-kafka:latest
+    restart: unless-stopped
+    logging:
+      driver: 'gelf'
+      options:
+        gelf-address: 'udp://127.0.0.1:12201'
+        tag: kafka2
+    depends_on:
+      graylog:
+        condition: service_healthy
+    ports:
+      - "29093:29093"                                                                  # открываем порт для подключения клиентов, извне контейнера
+    environment:
+      # KAFKA CLUSTER
+      KAFKA_NODE_ID: 2                                                                 # Уникальный идентификатор узла в кластере
+      CLUSTER_ID: HE5uOlWcSg6jiUydVtaRzQ                                               # Генерируем идентификатор кластера: docker compose exec kafka1 kafka-storage.sh random-uuid
+      KAFKA_PROCESS_ROLES: broker,controller                                           # узел может входить в кворум как контроллер и как брокер
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093,2@kafka2:9093,3@kafka3:9093        # список нод, для кворума (здесь нужно перечислить адреса всех известных контроллеров)
+      # LISTENERS
+      KAFKA_LISTENERS: INTERNAL://:9091,CONTROLLER://:9093,EXTERNAL://:29093           # публикуем порты на которые брокер будет принимать сообщения
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://:9091,EXTERNAL://127.0.0.1:29093          # публикуем порты для подключения клиентов
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT   # разрешаем доступ без шифрования и авторизации
+      # BROKER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL                                       # название слушателя для брокера, основная цель - репликация разделов
+      KAFKA_BROKER_ID: 2
+      # CONTROLLER
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER                                      # название слушателя для контроллера
+      # CLIENT
+      KAFKA_CLIENT_LISTENER_NAME: EXTERNAL                                             # название слушателя для клиента
+      # COMMON SETTIGNS
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true                                           # запрещаем автоматическое создание топиков
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9997
+      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka2 -Dcom.sun.management.jmxremote.rmi.port=9997
+      KAFKA_LOG_DIRS: '/tmp/kafka-logs'
+    networks:
+      - ompnw
+    volumes:
+      - kafkavolume2:/kafka/data
+    healthcheck:
+      # проверка состояния контейнера. проверка происходит по готовности порта 9091
+      test: "bash -c 'printf \"\" > /dev/tcp/127.0.0.1/9091; exit $$?;'"
+      interval: 5s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  kafka3:
+    container_name: kafka3
+    hostname: kafka3
+    image: confluentinc/cp-kafka:latest
+    restart: unless-stopped
+    logging:
+      driver: 'gelf'
+      options:
+        gelf-address: 'udp://127.0.0.1:12201'
+        tag: kafka3
+    depends_on:
+      graylog:
+        condition: service_healthy
+    ports:
+      - "29094:29094"                                                                  # открываем порт для подключения клиентов, извне контейнера
+    environment:
+      # KAFKA CLUSTER
+      KAFKA_NODE_ID: 3                                                                 # Уникальный идентификатор узла в кластере
+      CLUSTER_ID: HE5uOlWcSg6jiUydVtaRzQ                                               # Генерируем идентификатор кластера: docker compose exec kafka1 kafka-storage.sh random-uuid
+      KAFKA_PROCESS_ROLES: broker,controller                                           # узел может входить в кворум как контроллер и как брокер
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093,2@kafka2:9093,3@kafka3:9093        # список нод, для кворума (здесь нужно перечислить адреса всех известных контроллеров)
+      # LISTENERS
+      KAFKA_LISTENERS: INTERNAL://:9091,CONTROLLER://:9093,EXTERNAL://:29094           # публикуем порты на которые брокер будет принимать сообщения
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://:9091,EXTERNAL://127.0.0.1:29094          # публикуем порты для подключения клиентов
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT   # разрешаем доступ без шифрования и авторизации
+      # BROKER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL                                       # название слушателя для брокера, основная цель - репликация разделов
+      KAFKA_BROKER_ID: 3
+      # CONTROLLER
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER                                      # название слушателя для контроллера
+      # CLIENT
+      KAFKA_CLIENT_LISTENER_NAME: EXTERNAL                                             # название слушателя для клиента
+      # COMMON SETTIGNS
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true                                           # запрещаем автоматическое создание топиков
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9997
+      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka3 -Dcom.sun.management.jmxremote.rmi.port=9997
+      KAFKA_LOG_DIRS: '/tmp/kafka-logs'
+    networks:
+      - ompnw
+    volumes:
+      - kafkavolume3:/kafka/data
+    healthcheck:
+      # проверка состояния контейнера. проверка происходит по готовности порта 9091
+      test: "bash -c 'printf \"\" > /dev/tcp/127.0.0.1/9091; exit $$?;'"
+      interval: 5s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  pgdata:
+    driver: local
+  mongodata:
+    driver: local
+  mongodb_configdb:
+    driver: local
+  opensearch-data:
+    driver: local
+  graylog_data:
+    driver: local
+  graylog_plugin:
+    driver: local
+  kafkavolume1:
+    driver: local
+  kafkavolume2:
+    driver: local
+  kafkavolume3:
+    driver: local
+  grafana_storage:
+    driver: local
+
+networks:
+  ompnw:
+    driver: bridge

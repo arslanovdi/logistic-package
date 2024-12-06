@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package logistic_package_api.v1;
+
+import "validate/validate.proto";
+import "google/protobuf/wrappers.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "logistic-package-api.v1";
+
+service LogisticPackageApiService {
+
+  rpc CreateV1(CreateRequestV1) returns (CreateResponseV1) {
+    option (google.api.http) = {
+      post: "/v1/packages"
+      body: "*"
+    };
+  }
+
+  rpc DeleteV1(DeleteV1Request) returns (DeleteV1Response) {
+    option (google.api.http) = {
+      delete: "/v1/packages/{package_id}"
+    };
+  }
+
+  rpc GetV1(GetV1Request) returns (GetV1Response) {
+    option (google.api.http) = {
+      get: "/v1/packages/{package_id}"
+    };
+  }
+
+  rpc ListV1(ListV1Request) returns (ListV1Response) {
+    option (google.api.http) = {
+      get: "/v1/packages"
+    };
+  }
+
+  rpc UpdateV1(UpdateV1Request) returns (UpdateV1Response) {
+    option (google.api.http) = {
+      put: "/v1/packages"
+      body: "*"
+    };
+  }
+}
+
+message Package {
+  uint64 id  = 1;
+  string title = 2 [(validate.rules).string = {min_len: 1, max_len: 50}];
+  optional uint64 weight = 3 [(validate.rules).uint64.gt = 0];
+  google.protobuf.Timestamp created = 4;
+  optional google.protobuf.Timestamp updated = 5;
+}
+
+message CreateRequestV1 {
+  Package value = 1;
+}
+
+message CreateResponseV1 {
+  uint64 package_id  = 1;
+}
+
+message DeleteV1Request {
+  uint64 package_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message DeleteV1Response {
+}
+
+message GetV1Request {
+  uint64 package_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message GetV1Response {
+  Package value = 1;
+}
+
+message ListV1Request {
+  uint64 offset = 1 [(validate.rules).uint64.gt = 0];
+  uint64 limit = 2 [(validate.rules).uint64.gt = 0];
+}
+
+message ListV1Response {
+  repeated Package packages = 1;
+}
+
+message UpdateV1Request {
+  Package value = 1;
+}
+
+message UpdateV1Response {
+}
+
+

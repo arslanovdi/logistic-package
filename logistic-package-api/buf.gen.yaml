@@ -1,0 +1,33 @@
+version: v1
+plugins:
+  - name: go
+    out: ../pkg/logistic-package-api
+    opt:
+      - paths=source_relative
+    strategy: directory
+
+  - name: go-grpc
+    out: ../pkg/logistic-package-api
+    opt:
+      - paths=source_relative
+    strategy: directory
+
+  - name: grpc-gateway
+    out: ../pkg/logistic-package-api
+    opt:
+      - logtostderr=true
+      - paths=source_relative
+    strategy: directory
+
+  - name: validate
+    out: ../pkg/logistic-package-api
+    opt:
+      - lang=go
+    strategy: directory
+
+  - name: openapiv2
+    path: protoc-gen-openapiv2
+    out: swagger
+    opt:
+      - generate_unbound_methods=true
+    strategy: directory

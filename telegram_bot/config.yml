@@ -1,0 +1,8 @@
+grpc:
+  host: localhost
+  port: 8082
+  ctxTimeout: 5s
+jaeger:
+  service: "logistic-package-api"
+  host: "localhost"
+  port: ":4317" # grpc 4317; http 6831
