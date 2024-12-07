@@ -2,7 +2,7 @@
 #builder
 FROM golang:1.23.3-bullseye AS builder
 
-COPY logistic-package-api/Makefile /home/Makefile
+COPY telegram_bot/Makefile /home/Makefile
 COPY go.mod /home
 COPY go.sum /home
 
@@ -11,23 +11,21 @@ WORKDIR /home
 COPY .. /home
 
 # собираем
-RUN make build-outbox
+RUN make build-tgbot
 
 # outbox
 
 FROM golang:1.23.3-bullseye AS server
 
-ARG GITHUB_PATH=github.com/arslanovdi/logistic-package/logistic-package-api
+ARG GITHUB_PATH=github.com/arslanovdi/logistic-package/telegram_bot
 
 LABEL org.opencontainers.image.source=https://${GITHUB_PATH}
 
 WORKDIR /root/
 # копируем все что нужно для работы приложения
-COPY --from=builder /home/bin/retranslator .
-COPY --from=builder /home/logistic-package-api/config.yml logistic-package-api/config.yml
+COPY --from=builder /home/bin/tg_bot .
+COPY --from=builder /home/telegram_bot/config.yml telegram_bot/config.yml
 
-RUN chown root:root retranslator
+RUN chown root:root tg_bot
 
-EXPOSE 8000
-
-CMD ["./retranslator"]
+CMD ["./tg_bot"]

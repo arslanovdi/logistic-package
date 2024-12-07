@@ -4,15 +4,14 @@ package main
 import (
 	"context"
 	"errors"
+	"github.com/arslanovdi/logistic-package/pkg/logger"
 	routerPkg "github.com/arslanovdi/logistic-package/telegram_bot/internal/app/router"
 	"github.com/arslanovdi/logistic-package/telegram_bot/internal/config"
 	"github.com/arslanovdi/logistic-package/telegram_bot/internal/fake"
 	"github.com/arslanovdi/logistic-package/telegram_bot/internal/grpc"
-	"github.com/arslanovdi/logistic-package/telegram_bot/internal/logger"
 	"github.com/arslanovdi/logistic-package/telegram_bot/internal/service"
 	"github.com/arslanovdi/logistic-package/telegram_bot/internal/tracer"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/joho/godotenv"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -20,13 +19,22 @@ import (
 	"time"
 )
 
-const level = slog.LevelDebug // log level
+const (
+	configFile = "telegram_bot/config.yml"
+)
 
 func main() {
-	logger.InitializeLogger(level) // slog logger
+	logger.InitializeLogger(slog.LevelDebug) // slog logger
 	log := slog.With("func", "main")
 
-	startCtx, cancel := context.WithTimeout(context.Background(), time.Minute) // контекст запуска приложения
+	err1 := config.ReadConfigYML(configFile)
+	if err1 != nil {
+		log.Warn("Failed to read config", slog.String("error", err1.Error()))
+		os.Exit(1)
+	}
+	cfg := config.GetConfigInstance()
+
+	startCtx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(cfg.Project.StartupTimeout)) // контекст запуска приложения
 	defer cancel()
 	go func() {
 		<-startCtx.Done()
@@ -36,19 +44,10 @@ func main() {
 		}
 	}()
 
-	err1 := config.ReadConfigYML("config.yml")
-	if err1 != nil {
-		log.Warn("Failed to read config", slog.String("error", err1.Error()))
-		os.Exit(1)
-	}
-
-	// TODO move to config
-	_ = godotenv.Load()
-
-	token, found := os.LookupEnv("TOKEN")
-	if !found {
-		log.Warn("environment variable TOKEN not found in .env")
-		os.Exit(1)
+	if cfg.Project.Debug {
+		logger.SetLogLevel(slog.LevelDebug)
+	} else {
+		logger.SetLogLevel(slog.LevelInfo)
 	}
 
 	ctxTrace, cancelTrace := context.WithCancel(context.Background())
@@ -62,7 +61,7 @@ func main() {
 	grpcClient := grpc.NewGrpcClient()
 	packageService := service.NewPackageService(grpcClient)
 
-	bot, err3 := tgbotapi.NewBotAPI(token)
+	bot, err3 := tgbotapi.NewBotAPI(cfg.Telegram.Token)
 	if err3 != nil {
 		log.Warn("Failed to create new bot", slog.String("error", err3.Error()))
 		os.Exit(1)
@@ -92,6 +91,15 @@ func main() {
 			routerHandler.HandleUpdate(update)
 		case <-stop:
 			slog.Info("Graceful shutdown")
+
+			ctxShutdown, cancelShutdown := context.WithTimeout(context.Background(), time.Second*time.Duration(cfg.Project.ShutdownTimeout))
+			defer cancelShutdown()
+			go func() {
+				<-ctxShutdown.Done()
+				log.Warn("Application shutdown time exceeded")
+				os.Exit(1)
+			}()
+
 			grpcClient.Close()
 			if err := trace.Shutdown(ctxTrace); err != nil {
 				log.Error("Error shutting down tracer provider", slog.String("error", err.Error()))

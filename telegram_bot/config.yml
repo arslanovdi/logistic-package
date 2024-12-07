@@ -1,8 +1,17 @@
+project:
+    name: Logistic Package Telegram Bot
+    debug: true
+    environment: development
+    instance: "logistic-package-telegram_bot-1"
+    startupTimeout: 60  # seconds
+    shutdownTimeout: 5  # seconds
 grpc:
-  host: localhost
+  host: logistic-package-api # localhost
   port: 8082
   ctxTimeout: 5s
 jaeger:
-  service: "logistic-package-api"
-  host: "localhost"
+  service: "logistic-package-telegram_bot"
+  host: "jaeger"  # localhost
   port: ":4317" # grpc 4317; http 6831
+telegram:
+  token: 7012140868:AAHAkiK606qFalhnX7Cm3d8aDRTIw5m3NWw

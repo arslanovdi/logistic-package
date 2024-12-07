@@ -13,8 +13,19 @@ var cfg *Config
 
 // Config структура конфигурации сервиса
 type Config struct {
-	GRPC   grpc   `yaml:"grpc"`
-	Jaeger jaeger `yaml:"jaeger"`
+	Project  Project  `yaml:"project"`
+	GRPC     grpc     `yaml:"grpc"`
+	Jaeger   jaeger   `yaml:"jaeger"`
+	Telegram telegram `yaml:"telegram"`
+}
+
+type Project struct {
+	Name            string `yaml:"name"`
+	Debug           bool   `yaml:"debug"`
+	Environment     string `yaml:"environment"`
+	Instance        string `yaml:"instance"`
+	StartupTimeout  int    `yaml:"startupTimeout"`
+	ShutdownTimeout int    `yaml:"shutdownTimeout"`
 }
 
 type grpc struct {
@@ -27,6 +38,10 @@ type jaeger struct {
 	Service string `yaml:"service"`
 	Host    string `yaml:"host"`
 	Port    string `yaml:"port"`
+}
+
+type telegram struct {
+	Token string `yaml:"token"`
 }
 
 // GetConfigInstance returns service config

@@ -1,4 +1,4 @@
-// Package server - все http сервисы приложения
+// Package server - все веб серверы приложения
 package server
 
 import (

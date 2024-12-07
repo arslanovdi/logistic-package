@@ -6,7 +6,7 @@ endif
 export GO111MODULE=on
 
 SERVICE_NAME=logistic-package-api
-SERVICE_PATH=arslanovdi/logistic-package-api
+SERVICE_PATH=arslanovdi/logistic-package/logistic-package-api
 
 PGV_VERSION:="v1.1.0"
 BUF_VERSION:="v1.47.2"
@@ -39,7 +39,7 @@ test:
 # ----------------------------------------------------------------
 
 .PHONY: generate
-generate-go: .generate-install-buf .generate-go .generate-finalize-go
+generate-go: .generate-install-buf .generate-go #.generate-finalize-go
 
 .generate-install-buf:
 	@ command -v buf 2>&1 > /dev/null || (echo "Install buf" && \
@@ -49,6 +49,7 @@ generate-go: .generate-install-buf .generate-go .generate-finalize-go
 #	scoop install buf	for windows
 
 .generate-go:
+	cd protobuf && \
 	$(BUF_EXE) generate
 
 .generate-finalize-go:
@@ -72,21 +73,11 @@ build-go: generate-go .build
 
 .build:
 	go mod download && CGO_ENABLED=1  go build \
-		-tags='no_mysql no_sqlite3' \
-		-ldflags=" \
-			-X 'github.com/$(SERVICE_PATH)/internal/config.version=$(VERSION)' \
-			-X 'github.com/$(SERVICE_PATH)/internal/config.commitHash=$(COMMIT_HASH)' \
-		" \
-		-o ./bin/grpc-server$(shell go env GOEXE) ./cmd/grpc-server/main.go
+		-o ./bin/grpc-server$(shell go env GOEXE) ./logistic-package-api/cmd/grpc-server/main.go
 
 .PHONY: build-outbox
 build-outbox: .build-outbox
 
 .build-outbox:
 	go mod download && CGO_ENABLED=1  go build \
-    		-tags='no_mysql no_sqlite3' \
-    		-ldflags=" \
-    			-X 'github.com/$(SERVICE_PATH)/internal/config.version=$(VERSION)' \
-    			-X 'github.com/$(SERVICE_PATH)/internal/config.commitHash=$(COMMIT_HASH)' \
-    		" \
-    		-o ./bin/retranslator$(shell go env GOEXE) ./cmd/retranslator/main.go
+    		-o ./bin/retranslator$(shell go env GOEXE) ./logistic-package-api/cmd/retranslator/main.go
