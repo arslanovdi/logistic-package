@@ -22,9 +22,6 @@ import (
 
 const (
 	starttimeout = 5 * time.Second
-
-	//configFile = "events/config_local.yml"
-	configFile = "events/config.yml"
 )
 
 type PackageConsumer interface {
@@ -35,17 +32,18 @@ type PackageConsumer interface {
 func main() {
 	logger.InitializeLogger(slog.LevelDebug)
 
-	if err := config.ReadConfigYML(configFile); err != nil {
+	flag.Parse()
+	version := flag.String("version", "dev", "Defines the version of the service")
+	commitHash := flag.String("commitHash", "-", "Defines the commit hash of the service")
+	configFile := flag.String("configFile", "events/config_local.yml", "Defines the config file of the service")
+
+	if err := config.ReadConfigYML(*configFile); err != nil {
 		slog.Warn("Failed init configuration", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
 	cfg := config.GetConfigInstance()
 
 	log := slog.With("func", cfg.Project.Instance+".main")
-
-	flag.Parse()
-	version := flag.String("version", "dev", "Defines the version of the service")
-	commitHash := flag.String("commitHash", "-", "Defines the commit hash of the service")
 
 	cfg.Project.Version = *version
 	cfg.Project.CommitHash = *commitHash
@@ -92,12 +90,6 @@ func main() {
 	isReady := &atomic.Value{}
 	isReady.Store(false)
 
-	go func() { // TODO отсечка статус сервера
-		time.Sleep(starttimeout)
-		isReady.Store(true)
-		log.Info("The service is ready to accept requests")
-	}()
-
 	statusServer := server.NewStatusServer(
 		isReady,
 		server.StatusConfig{
@@ -118,11 +110,12 @@ func main() {
 	)
 	statusServer.Start()
 
-	metricsServer := server.NewMetricsServer(server.MetricsConfig{
+	mcfg := server.MetricsConfig{
 		Host: cfg.Metrics.Host,
 		Port: cfg.Metrics.Port,
 		Path: cfg.Metrics.Path,
-	})
+	}
+	metricsServer := server.NewMetricsServer(mcfg)
 	metricsServer.Start()
 
 	kafka, err := consumer.NewKafkaConsumer()
@@ -131,17 +124,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	for range cfg.Kafka.ConsumerCount { // запускаем нужное кол-во потоков чтения
-		go func() {
-			err = kafka.Run(cfg.Kafka.Topic, process.PrintPackageEvent)
-			if err != nil {
-				log.Error("kafka consumer error", slog.String("error", err.Error()))
-				/*				select {
-								case stop <- os.Interrupt: // Start graceful shutdown
-								}*/
-			}
-		}()
-	}
+	go func() {
+		err = kafka.Run(cfg.Kafka.Topic, process.PrintPackageEvent)
+		if err != nil {
+			log.Error("kafka consumer error", slog.String("error", err.Error()))
+		}
+	}()
+
+	isReady.Store(true)
 
 	cancel() // отменяем контекст запуска приложения
 	<-stop

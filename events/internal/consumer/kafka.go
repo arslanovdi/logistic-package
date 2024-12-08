@@ -36,7 +36,7 @@ func NewKafkaConsumer() (*KafkaConsumer, error) {
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":       strings.Join(cfg.Kafka.Brokers, ","),
 		"group.id":                cfg.Kafka.GroupID,
-		"enable.auto.commit":      "true",
+		"enable.auto.commit":      "false",
 		"auto.commit.interval.ms": 1000,
 		"auto.offset.reset":       "earliest",
 	})
@@ -94,18 +94,22 @@ func (k *KafkaConsumer) Run(topic string, handler func(key string, msg model.Pac
 		k.tracer.OnPoll(kafkaMsg, k.group)
 
 		event := model.PackageEvent{}
-		err = k.deserializer.DeserializeInto(
+		err1 := k.deserializer.DeserializeInto(
 			topic,
 			kafkaMsg.Value,
 			&event)
-		if err != nil {
-			return err
+		if err1 != nil {
+			return err1
 		} else {
 			k.tracer.OnProcess(kafkaMsg, k.group)
 
 			handler(string(kafkaMsg.Key), event, int64(kafkaMsg.TopicPartition.Offset))
 
-			k.consumer.CommitMessage(kafkaMsg)
+			_, err2 := k.consumer.CommitMessage(kafkaMsg)
+			if err2 != nil {
+				return err2
+			}
+
 			k.tracer.OnCommit(kafkaMsg, k.group)
 		}
 

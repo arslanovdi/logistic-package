@@ -34,12 +34,12 @@ type Project struct {
 
 // Metrics - contains all parameters metrics information.
 type Metrics struct {
-	Port int    `yaml:"port"`
 	Host string `yaml:"host"`
+	Port int    `yaml:"port"`
 	Path string `yaml:"path"`
 }
 
-// Jaeger - contains all parameters metrics information.
+// Jaeger - contains all parameters jaeger information.
 type Jaeger struct {
 	Host string `yaml:"host"`
 	Port string `yaml:"port"`
@@ -49,7 +49,6 @@ type Jaeger struct {
 type Kafka struct {
 	Topic          string   `yaml:"topic"`
 	GroupID        string   `yaml:"groupId"`
-	ConsumerCount  int      `yaml:"consumerCount"`
 	Brokers        []string `yaml:"brokers"`
 	SchemaRegistry string   `yaml:"schemaregistry"`
 }

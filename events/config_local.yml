@@ -8,16 +8,16 @@ project:
 
 metrics:
   host: 0.0.0.0
-  port: 9100
-  path: /metrics
+  port: 9101
+  path: /metric
 
 jaeger:
-  host: "jaeger"
+  host: "127.0.0.1"
   port: ":4317"   # grpc 4317; http 6831
 
 status:
   host: 0.0.0.0
-  port: 8000
+  port: 8002
   livenessPath: /live
   readinessPath: /ready
   versionPath: /version
@@ -26,7 +26,7 @@ kafka:
   topic: "logistic-package-events"
   groupId: "logistic-package-events"
   brokers:
-    - "kafka1:9091"
-    - "kafka2:9091"
-    - "kafka3:9091"
-  schemaregistry:  "http://schemaregistry1:8081"
+    - "localhost:29092"
+    - "localhost:29093"
+    - "localhost:29094"
+  schemaregistry:  "http://localhost:8081"
