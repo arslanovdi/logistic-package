@@ -1,0 +1,32 @@
+project:
+  name: Logistic Package API
+  debug: true
+  environment: development
+  instance: "logistic-package-events-1"
+  startupTimeout: 60  # seconds
+  shutdownTimeout: 30  # seconds
+
+metrics:
+  host: 0.0.0.0
+  port: 9104
+  path: /metrics
+
+jaeger:
+  host: "127.0.0.1"
+  port: ":4317"   # grpc 4317; http 6831
+
+status:
+  host: 0.0.0.0
+  port: 8004
+  livenessPath: /live
+  readinessPath: /ready
+  versionPath: /version
+
+kafka:
+  topic: "logistic-package-events"
+  groupId: "logistic-package-events"
+  brokers:
+    - "localhost:29092"
+    - "localhost:29093"
+    - "localhost:29094"
+  schemaregistry:  "http://localhost:8081"
