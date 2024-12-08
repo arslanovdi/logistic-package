@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/arslanovdi/logistic-package/events/internal/config"
 	"github.com/arslanovdi/logistic-package/events/internal/consumer"
+	"github.com/arslanovdi/logistic-package/events/internal/general"
 	"github.com/arslanovdi/logistic-package/events/internal/process"
 	"github.com/arslanovdi/logistic-package/pkg/logger"
 	"github.com/arslanovdi/logistic-package/pkg/model"
@@ -32,10 +33,10 @@ type PackageConsumer interface {
 func main() {
 	logger.InitializeLogger(slog.LevelDebug)
 
-	flag.Parse()
 	version := flag.String("version", "dev", "Defines the version of the service")
 	commitHash := flag.String("commitHash", "-", "Defines the commit hash of the service")
-	configFile := flag.String("configFile", "events/config_local.yml", "Defines the config file of the service")
+	configFile := flag.String("config", "events/config_local.yml", "Defines the config file of the service")
+	flag.Parse()
 
 	log := slog.With("func", "main")
 
@@ -122,10 +123,17 @@ func main() {
 	}
 
 	go func() {
-		err = kafka.Run(cfg.Kafka.Topic, process.PrintPackageEvent)
-		if err != nil {
-			log.Error("kafka consumer error", slog.String("error", err.Error()))
+		for {
+			err = kafka.Run(cfg.Kafka.Topic, process.PrintPackageEvent)
+			if errors.Is(err, general.ErrConsumerClosed) {
+				break
+			}
+			if err != nil {
+				log.Error("kafka consumer error", slog.String("error", err.Error()))
+			}
+			time.Sleep(starttimeout)
 		}
+
 	}()
 
 	isReady.Store(true)
