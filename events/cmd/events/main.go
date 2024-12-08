@@ -37,13 +37,13 @@ func main() {
 	commitHash := flag.String("commitHash", "-", "Defines the commit hash of the service")
 	configFile := flag.String("configFile", "events/config_local.yml", "Defines the config file of the service")
 
+	log := slog.With("func", "main")
+
 	if err := config.ReadConfigYML(*configFile); err != nil {
-		slog.Warn("Failed init configuration", slog.String("error", err.Error()))
+		log.Warn("Failed init configuration", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
 	cfg := config.GetConfigInstance()
-
-	log := slog.With("func", cfg.Project.Instance+".main")
 
 	cfg.Project.Version = *version
 	cfg.Project.CommitHash = *commitHash
@@ -71,9 +71,6 @@ func main() {
 		slog.String("environment", cfg.Project.Environment),
 		slog.String("instance", cfg.Project.Instance),
 	)
-
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 
 	ctxTrace, cancelTrace := context.WithTimeout(context.Background(), starttimeout)
 	defer cancelTrace()
@@ -134,6 +131,9 @@ func main() {
 	isReady.Store(true)
 
 	cancel() // отменяем контекст запуска приложения
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+
 	<-stop
 	log.Info("Graceful shutdown")
 

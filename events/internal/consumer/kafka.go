@@ -100,19 +100,18 @@ func (k *KafkaConsumer) Run(topic string, handler func(key string, msg model.Pac
 			&event)
 		if err1 != nil {
 			return err1
-		} else {
-			k.tracer.OnProcess(kafkaMsg, k.group)
-
-			handler(string(kafkaMsg.Key), event, int64(kafkaMsg.TopicPartition.Offset))
-
-			_, err2 := k.consumer.CommitMessage(kafkaMsg)
-			if err2 != nil {
-				return err2
-			}
-
-			k.tracer.OnCommit(kafkaMsg, k.group)
 		}
 
+		k.tracer.OnProcess(kafkaMsg, k.group)
+
+		handler(string(kafkaMsg.Key), event, int64(kafkaMsg.TopicPartition.Offset))
+
+		_, err2 := k.consumer.CommitMessage(kafkaMsg)
+		if err2 != nil {
+			return err2
+		}
+
+		k.tracer.OnCommit(kafkaMsg, k.group)
 	}
 	return nil
 }

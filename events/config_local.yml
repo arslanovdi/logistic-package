@@ -8,8 +8,8 @@ project:
 
 metrics:
   host: 0.0.0.0
-  port: 9101
-  path: /metric
+  port: 9104
+  path: /metrics
 
 jaeger:
   host: "127.0.0.1"
@@ -17,7 +17,7 @@ jaeger:
 
 status:
   host: 0.0.0.0
-  port: 8002
+  port: 8004
   livenessPath: /live
   readinessPath: /ready
   versionPath: /version
