@@ -4,8 +4,9 @@ package api
 import (
 	"context"
 	"errors"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/model"
+	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/general"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/service"
+	"github.com/arslanovdi/logistic-package/pkg/model"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -67,7 +68,7 @@ func (p *PackageAPI) DeleteV1(ctx context.Context, req *pb.DeleteV1Request) (*pb
 	if err1 != nil {
 		log.Error("DeleteV1 - failed", slog.String("error", err1.Error()))
 
-		if errors.Is(err1, model.ErrNotFound) {
+		if errors.Is(err1, general.ErrNotFound) {
 			return nil, status.Error(codes.NotFound, err1.Error())
 		}
 		return nil, status.Error(codes.Internal, err1.Error())
@@ -95,7 +96,7 @@ func (p *PackageAPI) GetV1(ctx context.Context, req *pb.GetV1Request) (*pb.GetV1
 
 	pkg, err1 := p.packageService.Get(ctx, req.PackageId)
 	if err1 != nil {
-		if errors.Is(err1, model.ErrNotFound) {
+		if errors.Is(err1, general.ErrNotFound) {
 			log.Debug("not found", slog.Uint64("id", req.PackageId))
 			return nil, status.Error(codes.NotFound, "")
 		}
@@ -166,7 +167,7 @@ func (p *PackageAPI) UpdateV1(ctx context.Context, req *pb.UpdateV1Request) (*pb
 
 	err1 := p.packageService.Update(ctx, pkg)
 	if err1 != nil {
-		if errors.Is(err1, model.ErrNotFound) {
+		if errors.Is(err1, general.ErrNotFound) {
 			log.Debug("package not found", slog.Uint64("id", pkg.ID))
 			return nil, status.Error(codes.NotFound, "")
 		}

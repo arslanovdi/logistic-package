@@ -5,8 +5,9 @@ import (
 	"errors"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/model"
+	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/general"
 	"github.com/arslanovdi/logistic-package/pkg/ctxutil"
+	"github.com/arslanovdi/logistic-package/pkg/model"
 	"github.com/jackc/pgx/v5"
 	"log/slog"
 )
@@ -35,7 +36,7 @@ func (r *Repo) Get(ctx context.Context, id uint64) (*model.Package, error) {
 	pkg, err2 := pgx.CollectOneRow(rows, pgx.RowToStructByName[model.Package])
 	if err2 != nil {
 		if errors.Is(err2, pgx.ErrNoRows) {
-			return nil, model.ErrNotFound
+			return nil, general.ErrNotFound
 		}
 		return nil, fmt.Errorf("postgres.Get: %w", err2)
 	}

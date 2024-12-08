@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/model"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/server"
+	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/general"
+	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/metrics"
+	"github.com/arslanovdi/logistic-package/pkg/model"
 	"log/slog"
 )
 
@@ -31,10 +32,10 @@ func (r *Repo) Unlock(ctx context.Context, eventID []int64) error {
 	}
 
 	if tag.RowsAffected() == 0 {
-		return model.ErrNotFound
+		return general.ErrNotFound
 	}
 
-	server.RetranslatorEvents.Sub(float64(len(eventID))) // TODO метрика, кол-во обрабатываемых событий, убавляем счетчик
+	metrics.RetranslatorEvents.Sub(float64(len(eventID))) // TODO метрика, кол-во обрабатываемых событий, убавляем счетчик
 
 	return nil
 }

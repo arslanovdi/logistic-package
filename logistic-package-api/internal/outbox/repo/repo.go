@@ -3,7 +3,7 @@ package repo
 
 import (
 	"context"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/model"
+	"github.com/arslanovdi/logistic-package/pkg/model"
 )
 
 // EventRepo - интерфейс работы с БД событий.

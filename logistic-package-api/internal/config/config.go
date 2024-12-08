@@ -17,12 +17,12 @@ const (
 var cfg *Config
 
 // GetConfigInstance returns service config
-func GetConfigInstance() Config {
+func GetConfigInstance() *Config {
 	if cfg != nil {
-		return *cfg
+		return cfg
 	}
 
-	return Config{}
+	return &Config{}
 }
 
 // Database - contains all parameters database connection.
@@ -55,15 +55,14 @@ type Rest struct {
 
 // Project - contains all parameters project information.
 type Project struct {
-	Debug       bool   `yaml:"debug"`
-	Name        string `yaml:"name"`
-	Environment string `yaml:"environment"`
-	Version     string
-	CommitHash  string
-	Instance    string `yaml:"instance"`
-
-	StartupTimeout  int `yaml:"startupTimeout"`
-	ShutdownTimeout int `yaml:"shutdownTimeout"`
+	Debug           bool   `yaml:"debug"`
+	Name            string `yaml:"name"`
+	Environment     string `yaml:"environment"`
+	Version         string
+	CommitHash      string
+	Instance        string `yaml:"instance"`
+	StartupTimeout  int    `yaml:"startupTimeout"`
+	ShutdownTimeout int    `yaml:"shutdownTimeout"`
 }
 
 // Metrics - contains all parameters metrics information.
@@ -73,11 +72,10 @@ type Metrics struct {
 	Path string `yaml:"path"`
 }
 
-// Jaeger - contains all parameters metrics information.
+// Jaeger - contains all parameters jaeger information.
 type Jaeger struct {
-	Service string `yaml:"service"`
-	Host    string `yaml:"host"`
-	Port    string `yaml:"port"`
+	Host string `yaml:"host"`
+	Port string `yaml:"port"`
 }
 
 // Kafka - contains all parameters kafka information.

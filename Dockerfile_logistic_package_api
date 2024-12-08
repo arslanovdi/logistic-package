@@ -25,7 +25,7 @@ LABEL org.opencontainers.image.source=https://${GITHUB_PATH}
 WORKDIR /root/
 # копируем все что нужно для работы приложения
 COPY --from=builder /home/bin/grpc-server .
-COPY --from=builder /home/logistic-package-api/config.yml logistic-package-api/config.yml
+COPY --from=builder /home/logistic-package-api/config.yml .
 COPY --from=builder /home/logistic-package-api/migrations/ ./migrations
 COPY --from=builder /home/logistic-package-api/swagger ./swagger
 COPY --from=builder /home/logistic-package-api/swagger-ui ./swagger-ui
@@ -37,4 +37,4 @@ EXPOSE 8082
 EXPOSE 9100
 EXPOSE 8000
 
-CMD ["./grpc-server"]
+CMD ["./grpc-server", "-config=config.yml"]

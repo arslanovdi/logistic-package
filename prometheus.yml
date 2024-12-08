@@ -8,3 +8,4 @@ scrape_configs:
     static_configs:
       - targets:
         - logistic-package-api:9100
+        - events:9100

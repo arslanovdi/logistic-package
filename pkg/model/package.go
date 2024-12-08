@@ -3,6 +3,7 @@ package model
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	pb "github.com/arslanovdi/logistic-package/pkg/logistic-package-api"
 	"github.com/golang/protobuf/ptypes/timestamp"
@@ -48,6 +49,31 @@ type PackageEvent struct {
 	Status    EventStatus `db:"status" json:"status,omitempty"`
 	Payload   []byte      `db:"payload" json:"payload,omitempty"`
 	TraceID   *string     `db:"traceid" json:"-"`
+}
+
+func (e EventType) String() string {
+	switch e {
+	case Created:
+		return "created"
+	case Updated:
+		return "updated"
+	case Removed:
+		return "removed"
+	default:
+		return "unknown"
+	}
+}
+
+func (p *PackageEvent) String() string {
+
+	//str := fmt.Sprintf("Package № %s %s. Package: %s", p.PackageID, p.Type, p.Payload)
+
+	pkg := &Package{}
+	json.Unmarshal(p.Payload, pkg)
+
+	str := fmt.Sprintf("Package № %d %s. Package: %s", p.PackageID, p.Type, pkg)
+
+	return str
 }
 
 // String implements fmt.Stringer

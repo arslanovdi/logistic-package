@@ -4,11 +4,11 @@ package retranslator
 import (
 	"context"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/config"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/model"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/outbox/consumer"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/outbox/producer"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/outbox/repo"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/outbox/sender"
+	"github.com/arslanovdi/logistic-package/pkg/model"
 	"log/slog"
 	"time"
 )

@@ -10,27 +10,42 @@ import (
 	"os"
 	"sync/atomic"
 	"time"
-
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/config"
 )
 
 // StatusServer - http сервер для мониторинга состояния приложения
 type StatusServer struct {
 	server *http.Server
+	config StatusConfig
+	info   ProjectInfo
+}
+
+type StatusConfig struct {
+	Host          string
+	Port          int
+	LivenessPath  string
+	ReadinessPath string
+	VersionPath   string
+}
+
+type ProjectInfo struct {
+	Name        string
+	Debug       bool
+	Environment string
+	Version     string
+	CommitHash  string
+	Instance    string
 }
 
 // NewStatusServer - конструктор http сервера для мониторинга состояния приложения
-func NewStatusServer(isReady *atomic.Value) *StatusServer {
+func NewStatusServer(isReady *atomic.Value, cfg StatusConfig, projectInfo ProjectInfo) *StatusServer {
 
-	cfg := config.GetConfigInstance()
-
-	statusAddr := fmt.Sprintf("%s:%v", cfg.Status.Host, cfg.Status.Port)
+	statusAddr := fmt.Sprintf("%s:%v", cfg.Host, cfg.Port)
 
 	mux := http.DefaultServeMux
 
-	mux.HandleFunc(cfg.Status.LivenessPath, livenessHandler)
-	mux.HandleFunc(cfg.Status.ReadinessPath, readinessHandler(isReady))
-	mux.HandleFunc(cfg.Status.VersionPath, versionHandler(&cfg))
+	mux.HandleFunc(cfg.LivenessPath, livenessHandler)
+	mux.HandleFunc(cfg.ReadinessPath, readinessHandler(isReady))
+	mux.HandleFunc(cfg.VersionPath, versionHandler(projectInfo))
 
 	server := &http.Server{
 		Addr:              statusAddr,
@@ -40,6 +55,8 @@ func NewStatusServer(isReady *atomic.Value) *StatusServer {
 
 	return &StatusServer{
 		server: server,
+		config: cfg,
+		info:   projectInfo,
 	}
 }
 
@@ -48,9 +65,7 @@ func (s *StatusServer) Start() {
 
 	log := slog.With("func", "StatusServer.Start")
 
-	cfg := config.GetConfigInstance()
-
-	statusAddr := fmt.Sprintf("%s:%v", cfg.Status.Host, cfg.Status.Port)
+	statusAddr := fmt.Sprintf("%s:%v", s.config.Host, s.config.Port)
 
 	go func() {
 		log.Info("Status server is running", slog.String("address", statusAddr))
@@ -89,17 +104,18 @@ func readinessHandler(isReady *atomic.Value) http.HandlerFunc {
 	}
 }
 
-func versionHandler(cfg *config.Config) func(w http.ResponseWriter, _ *http.Request) {
+func versionHandler(projectInfo ProjectInfo) func(w http.ResponseWriter, _ *http.Request) {
 	return func(w http.ResponseWriter, _ *http.Request) {
 
 		log := slog.With("func", "versionHandler")
 
 		data := map[string]interface{}{
-			"name":        cfg.Project.Name,
-			"debug":       cfg.Project.Debug,
-			"environment": cfg.Project.Environment,
-			"version":     cfg.Project.Version,
-			"commitHash":  cfg.Project.CommitHash,
+			"name":        projectInfo.Name,
+			"debug":       projectInfo.Debug,
+			"environment": projectInfo.Environment,
+			"version":     projectInfo.Version,
+			"commitHash":  projectInfo.CommitHash,
+			"instance":    projectInfo.Instance,
 		}
 
 		w.Header().Set("Content-Type", "application/json")

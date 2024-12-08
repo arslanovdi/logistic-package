@@ -6,7 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/config"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/model"
+	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/general"
+	"github.com/arslanovdi/logistic-package/pkg/model"
 	oteltracer "github.com/arslanovdi/otel-kafka-go"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
@@ -15,6 +16,7 @@ import (
 	"log/slog"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -39,7 +41,7 @@ type kafkaSender struct {
 // ctx - контекст с трассировкой от OpenTelemetry
 func (k *kafkaSender) Send(ctx context.Context, pkg *model.PackageEvent, topic string) error {
 	if !k.initialized {
-		return model.ErrProducerClosed
+		return general.ErrProducerClosed
 	}
 
 	log := slog.With("func", "kafkaSender.Send")
@@ -75,7 +77,7 @@ func (k *kafkaSender) Send(ctx context.Context, pkg *model.PackageEvent, topic s
 
 	select {
 	case <-k.stop:
-		return model.ErrNoDeliveredMessage
+		return general.ErrNoDeliveredMessage
 
 	case event := <-deliveryChan:
 		switch ev := event.(type) {
@@ -97,13 +99,9 @@ func MustNewKafkaSender() EventSender {
 	log := slog.With("func", "MustNewKafkaSender")
 
 	cfg := config.GetConfigInstance()
-	brokers := ""
-	for _, b := range cfg.Kafka.Brokers {
-		brokers = brokers + b + ","
-	}
 
 	producer, err := kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": brokers[:len(brokers)-1],
+		"bootstrap.servers": strings.Join(cfg.Kafka.Brokers, ","),
 		"acks":              "all",
 	})
 	if err != nil {

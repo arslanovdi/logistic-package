@@ -17,12 +17,16 @@ type Config struct {
 	GRPC     grpc     `yaml:"grpc"`
 	Jaeger   jaeger   `yaml:"jaeger"`
 	Telegram telegram `yaml:"telegram"`
+	Metrics  Metrics  `yaml:"metrics"`
+	Status   Status   `yaml:"status"`
 }
 
 type Project struct {
 	Name            string `yaml:"name"`
 	Debug           bool   `yaml:"debug"`
 	Environment     string `yaml:"environment"`
+	Version         string
+	CommitHash      string
 	Instance        string `yaml:"instance"`
 	StartupTimeout  int    `yaml:"startupTimeout"`
 	ShutdownTimeout int    `yaml:"shutdownTimeout"`
@@ -35,9 +39,24 @@ type grpc struct {
 }
 
 type jaeger struct {
-	Service string `yaml:"service"`
-	Host    string `yaml:"host"`
-	Port    string `yaml:"port"`
+	Host string `yaml:"host"`
+	Port string `yaml:"port"`
+}
+
+// Metrics - contains all parameters metrics information.
+type Metrics struct {
+	Port int    `yaml:"port"`
+	Host string `yaml:"host"`
+	Path string `yaml:"path"`
+}
+
+// Status config for service.
+type Status struct {
+	Port          int    `yaml:"port"`
+	Host          string `yaml:"host"`
+	VersionPath   string `yaml:"versionPath"`
+	LivenessPath  string `yaml:"livenessPath"`
+	ReadinessPath string `yaml:"readinessPath"`
 }
 
 type telegram struct {
