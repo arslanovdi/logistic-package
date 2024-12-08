@@ -4,14 +4,16 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
+	"fmt"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/config"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/database"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/database/postgres"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/outbox/retranslator"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/outbox/sender"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/server"
 	"github.com/arslanovdi/logistic-package/pkg/logger"
-	"github.com/arslanovdi/logistic-package/pkg/tracer"
+	pkgserver "github.com/arslanovdi/logistic-package/pkg/server"
+	server2 "github.com/arslanovdi/logistic-package/pkg/tracer"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -22,21 +24,26 @@ import (
 
 const (
 	starttimeout = 5 * time.Second
-
-	//configFile = "logistic-package-api/config_local.yml"
-	configFile = "logistic-package-api/config.yml"
 )
 
 func main() {
 	logger.InitializeLogger(slog.LevelDebug)
 
-	log := slog.With("func", "Retranslator.main")
+	version := flag.String("version", "dev", "Defines the version of the service")
+	commitHash := flag.String("commitHash", "-", "Defines the commit hash of the service")
+	configFile := flag.String("config", "logistic-package-api/config_retranslator_local.yml", "Defines the config file of the service")
+	flag.Parse()
 
-	if err := config.ReadConfigYML(configFile); err != nil {
+	log := slog.With("func", "main")
+
+	if err := config.ReadConfigYML(*configFile); err != nil {
 		log.Warn("Failed init configuration", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
 	cfg := config.GetConfigInstance()
+
+	cfg.Project.Version = *version
+	cfg.Project.CommitHash = *commitHash
 
 	if cfg.Project.Debug {
 		logger.SetLogLevel(slog.LevelDebug)
@@ -54,10 +61,17 @@ func main() {
 		}
 	}()
 
+	log.Info(fmt.Sprintf("Starting service %s - retranslator", cfg.Project.Name),
+		slog.String("version", cfg.Project.Version),
+		slog.String("commitHash", cfg.Project.CommitHash),
+		slog.Bool("debug", cfg.Project.Debug),
+		slog.String("environment", cfg.Project.Environment),
+	)
+
 	ctxTrace, cancelTrace := context.WithTimeout(context.Background(), starttimeout)
 	defer cancelTrace()
 
-	trace, err1 := tracer.NewTracer(ctxTrace, cfg.Project.Name+" "+"Retranslator", cfg.Jaeger.Host+cfg.Jaeger.Port)
+	trace, err1 := server2.NewTracer(ctxTrace, cfg.Project.Name+" "+"Retranslator", cfg.Jaeger.Host+cfg.Jaeger.Port)
 	if err1 != nil {
 		log.Warn("Failed to init tracer", slog.String("error", err1.Error()))
 		os.Exit(1)
@@ -65,7 +79,24 @@ func main() {
 
 	isReady := &atomic.Value{}
 	isReady.Store(false)
-	statusServer := server.NewStatusServer(isReady)
+	statusServer := pkgserver.NewStatusServer(
+		isReady,
+		pkgserver.StatusConfig{
+			Host:          cfg.Status.Host,
+			Port:          cfg.Status.Port,
+			LivenessPath:  cfg.Status.LivenessPath,
+			ReadinessPath: cfg.Status.ReadinessPath,
+			VersionPath:   cfg.Status.VersionPath,
+		},
+		pkgserver.ProjectInfo{
+			Name:        cfg.Project.Name,
+			Debug:       cfg.Project.Debug,
+			Environment: cfg.Project.Environment,
+			Version:     cfg.Project.Version,
+			CommitHash:  cfg.Project.CommitHash,
+			Instance:    cfg.Project.Instance,
+		},
+	)
 	statusServer.Start()
 
 	go func() { // TODO отсечка статус сервера
@@ -74,7 +105,12 @@ func main() {
 		log.Info("The service is ready to accept requests")
 	}()
 
-	/*metricsServer := server.NewMetricsServer()	TODO metrics
+	/*mcfg := pkgserver.MetricsConfig{
+		Host: cfg.Metrics.Host,
+		Port: cfg.Metrics.Port,
+		Path: cfg.Metrics.Path,
+	}
+	metricsServer := pkgserver.NewMetricsServer(mcfg)
 	metricsServer.Start()*/
 
 	dbpool := database.MustGetPgxPool(context.Background())

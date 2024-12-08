@@ -5,8 +5,9 @@ import (
 	"errors"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/model"
+	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/general"
 	"github.com/arslanovdi/logistic-package/pkg/ctxutil"
+	"github.com/arslanovdi/logistic-package/pkg/model"
 	"github.com/jackc/pgx/v5"
 	"log/slog"
 )
@@ -40,7 +41,7 @@ func (r *Repo) List(ctx context.Context, offset uint64, limit uint64) ([]model.P
 	if err2 != nil {
 		if errors.Is(err2, pgx.ErrNoRows) {
 			log.Debug("no rows found")
-			return nil, model.ErrNotFound
+			return nil, general.ErrNotFound
 		}
 		return nil, fmt.Errorf("postgres.List: %w", err2)
 	}

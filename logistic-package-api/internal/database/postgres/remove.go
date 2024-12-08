@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/model"
+	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/general"
 	"log/slog"
 )
 
@@ -29,7 +29,7 @@ func (r *Repo) Remove(ctx context.Context, eventIDs []int64) error {
 	}
 
 	if tag.RowsAffected() == 0 {
-		return model.ErrNotFound
+		return general.ErrNotFound
 	}
 
 	return nil

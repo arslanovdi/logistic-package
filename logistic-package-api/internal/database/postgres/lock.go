@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/model"
+	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/general"
+	"github.com/arslanovdi/logistic-package/pkg/model"
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
 	"log/slog"
@@ -80,7 +81,7 @@ func (r *Repo) Lock(ctx context.Context, n int) ([]model.PackageEvent, error) {
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				log.Debug("no rows found")
-				return model.ErrNotFound
+				return general.ErrNotFound
 			}
 			return err
 		}

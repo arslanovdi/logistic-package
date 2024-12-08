@@ -2,7 +2,7 @@
 #builder
 FROM golang:1.23.3-bullseye AS builder
 
-COPY logistic-package-api/Makefile /home/Makefile
+COPY events/Makefile /home/Makefile
 COPY go.mod /home
 COPY go.sum /home
 
@@ -11,23 +11,21 @@ WORKDIR /home
 COPY .. /home
 
 # собираем
-RUN make build-outbox
+RUN make build-events
 
 # outbox
 
 FROM golang:1.23.3-bullseye AS server
 
-ARG GITHUB_PATH=github.com/arslanovdi/logistic-package/logistic-package-api
+ARG GITHUB_PATH=github.com/arslanovdi/logistic-package/events
 
 LABEL org.opencontainers.image.source=https://${GITHUB_PATH}
 
 WORKDIR /root/
 # копируем все что нужно для работы приложения
-COPY --from=builder /home/bin/retranslator .
-COPY --from=builder /home/logistic-package-api/config.yml .
+COPY --from=builder /home/bin/events .
+COPY --from=builder /home/events/config.yml .
 
-RUN chown root:root retranslator
+RUN chown root:root events
 
-EXPOSE 8000
-
-CMD ["./retranslator", "-config=config.yml"]
+CMD ["./events", "-config=config.yml"]

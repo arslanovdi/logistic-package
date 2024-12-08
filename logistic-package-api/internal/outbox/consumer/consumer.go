@@ -4,9 +4,9 @@ package consumer
 import (
 	"context"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/config"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/model"
+	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/metrics"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/outbox/repo"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/server"
+	"github.com/arslanovdi/logistic-package/pkg/model"
 	"log/slog"
 	"sync"
 	"time"
@@ -141,7 +141,7 @@ func (c *Consumer) Start() {
 
 				log.Debug("got events from db", slog.Int("count", len(events)))
 
-				server.RetranslatorEvents.Add(float64(len(events))) // метрика, кол-во обрабатываемых событий, прибавляем к счетчику
+				metrics.RetranslatorEvents.Add(float64(len(events))) // метрика, кол-во обрабатываемых событий, прибавляем к счетчику
 
 				packageid := events[0].PackageID
 				index := 0

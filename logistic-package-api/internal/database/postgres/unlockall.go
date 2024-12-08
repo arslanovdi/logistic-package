@@ -3,7 +3,7 @@ package postgres
 import (
 	"context"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/model"
+	"github.com/arslanovdi/logistic-package/pkg/model"
 	"github.com/jackc/pgx/v5"
 	"log/slog"
 )

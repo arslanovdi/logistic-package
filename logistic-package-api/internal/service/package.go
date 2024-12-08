@@ -4,7 +4,7 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/model"
+	"github.com/arslanovdi/logistic-package/pkg/model"
 )
 
 // Repo interface for work with database

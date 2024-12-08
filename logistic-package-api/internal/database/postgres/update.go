@@ -6,8 +6,9 @@ import (
 	"errors"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/model"
+	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/general"
 	"github.com/arslanovdi/logistic-package/pkg/ctxutil"
+	"github.com/arslanovdi/logistic-package/pkg/model"
 	"github.com/jackc/pgx/v5"
 	"go.opentelemetry.io/otel/trace"
 	"log/slog"
@@ -44,7 +45,7 @@ func (r *Repo) Update(ctx context.Context, pkg model.Package) error {
 		err := tx.QueryRow(ctx, query, args...).Scan(&pkg.Created, &pkg.Removed)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
-				return model.ErrNotFound
+				return general.ErrNotFound
 			}
 			return err
 		}

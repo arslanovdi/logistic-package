@@ -4,10 +4,10 @@ package producer
 import (
 	"context"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/config"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/model"
+	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/metrics"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/outbox/repo"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/outbox/sender"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/server"
+	"github.com/arslanovdi/logistic-package/pkg/model"
 	"go.opentelemetry.io/otel/trace"
 	"log/slog"
 	"sync"
@@ -98,7 +98,7 @@ func (p *Producer) Start(topic string) {
 
 						p.removes <- event[j].ID // удаляем событие из БД, т.к. оно обработано и отправлено в кавку
 					}
-					server.RetranslatorEvents.Add(-1 * float64(len(event))) // метрика, кол-во обрабатываемых событий
+					metrics.RetranslatorEvents.Add(-1 * float64(len(event))) // метрика, кол-во обрабатываемых событий
 
 				case <-p.stop:
 					return

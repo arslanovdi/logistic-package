@@ -24,8 +24,8 @@ LABEL org.opencontainers.image.source=https://${GITHUB_PATH}
 WORKDIR /root/
 # копируем все что нужно для работы приложения
 COPY --from=builder /home/bin/tg_bot .
-COPY --from=builder /home/telegram_bot/config.yml telegram_bot/config.yml
+COPY --from=builder /home/telegram_bot/config.yml .
 
 RUN chown root:root tg_bot
 
-CMD ["./tg_bot"]
+CMD ["./tg_bot", "-config=config.yml"]

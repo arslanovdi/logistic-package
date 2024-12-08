@@ -21,11 +21,11 @@ services:
     links:                  # определяет сетевую ссылку на контейнеры в другом сервисе, они не нужны для взаимодействия. Они выражают неявную зависимость между службами и влияют на порядок запуска служб.
       - postgres
       - jaeger
-    ports:
-      - "8080:8080"     # REST
-      - "8082:8082"     # gRPC
-      - "9100:9100"     # Metrics prometheus
-      - "8000:8000"     # Status
+#    ports:
+#      - "8080:8080"     # REST
+#      - "8082:8082"     # gRPC
+#      - "9100:9100"     # Metrics prometheus
+#      - "8000:8000"     # Status
     healthcheck:
       test: [ 'CMD', 'curl', '-f', 'http://localhost:8000/live' ]
       interval: 1m
@@ -71,9 +71,9 @@ services:
       - kafka1
       - kafka2
       - kafka3
-    ports:
+#    ports:
             #- "9100:9100"     # Metrics prometheus
-      - "8001:8000"     # Status
+#      - "8001:8000"     # Status
     healthcheck:
       test: [ 'CMD', 'curl', '-f', 'http://localhost:8000/live' ]
       interval: 1m
@@ -101,14 +101,47 @@ services:
     #ports:
       #- "9100:9100"     # Metrics prometheus
       #- "8000:8000"     # Status
-    #healthcheck:
-    #  test: [ 'CMD', 'curl', '-f', 'http://localhost:8000/live' ]
-    #  interval: 1m
-    #  timeout: 10s
-    #  retries: 3
-    #  start_period: 20s
+    healthcheck:
+      test: [ 'CMD', 'curl', '-f', 'http://localhost:8000/live' ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     volumes:
       - ./telegram_bot/config.yml:/root/config.yml
+
+  events1:
+    build: # сборка из образа контейнера
+      context: .
+      dockerfile: Dockerfile_events
+    restart: unless-stopped
+    logging:
+      driver: 'gelf'
+      options:
+        gelf-address: 'udp://127.0.0.1:12201'
+        tag: logistic-package-events-1
+    networks:
+      - ompnw
+    depends_on:
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
+      kafka3:
+        condition: service_healthy
+      schemaregistry1:
+        condition: service_started
+      #ports:
+      #- "9100:9100"     # Metrics prometheus
+      #- "8000:8000"     # Status
+    healthcheck:
+      test: [ 'CMD', 'curl', '-f', 'http://localhost:8000/live' ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    volumes:
+      - ./events/config.yml:/root/config.yml
 
   postgres:
     image: postgres:17.2

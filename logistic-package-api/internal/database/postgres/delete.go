@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/model"
+	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/general"
 	"github.com/arslanovdi/logistic-package/pkg/ctxutil"
+	"github.com/arslanovdi/logistic-package/pkg/model"
 	"github.com/jackc/pgx/v5"
 	"go.opentelemetry.io/otel/trace"
 	"log/slog"
@@ -61,7 +62,7 @@ func (r *Repo) Delete(ctx context.Context, id uint64) error {
 		}
 
 		if tag.RowsAffected() == 0 { // Получаем количество обновленных строк
-			return model.ErrNotFound
+			return general.ErrNotFound
 		}
 
 		_, err = tx.Exec(ctx, queryEvent, argsEvent...)

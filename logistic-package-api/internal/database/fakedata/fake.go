@@ -5,8 +5,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/model"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/service"
+	"github.com/arslanovdi/logistic-package/pkg/model"
 	"github.com/brianvoe/gofakeit/v7"
 	"time"
 )

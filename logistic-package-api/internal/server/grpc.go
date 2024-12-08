@@ -1,9 +1,10 @@
-// Package server - все веб серверы приложения
+// Package server - grpc серверы
 package server
 
 import (
 	"context"
 	"fmt"
+	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/metrics"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/service"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/prometheus/client_golang/prometheus"
@@ -39,13 +40,13 @@ func grpcMiddleware(ctx context.Context, req interface{}, _ *grpc.UnaryServerInf
 
 	m, err := handler(ctx, req)
 
-	GRPC2.Observe(time.Since(d).Seconds())
+	metrics.GRPC2.Observe(time.Since(d).Seconds())
 
 	if status.Code(err) == codes.NotFound {
-		GRPCNotFoundCounter.Inc()
+		metrics.GRPCNotFoundCounter.Inc()
 	}
 
-	CRUDCounter.Inc()
+	metrics.CRUDCounter.Inc()
 
 	return m, err
 }
@@ -125,11 +126,15 @@ func (s *GrpcServer) Start() {
 // Stop - stop gRPC server
 func (s *GrpcServer) Stop() error {
 
+	log := slog.With("func", "GrpcServer.Stop")
+
 	s.server.GracefulStop()
 
 	err := s.lis.Close()
 	if err != nil {
 		return err
 	}
+
+	log.Info("GrpcServer stopped")
 	return nil
 }

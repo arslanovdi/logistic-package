@@ -7,12 +7,12 @@ project:
     shutdownTimeout: 30  # seconds
 
 grpc:
-  host: logistic-package-api
+  host: localhost
   port: 8082
   ctxTimeout: 5s
 
 jaeger:
-  host: "jaeger"
+  host: localhost
   port: ":4317" # grpc 4317; http 6831
 
 telegram:
@@ -20,12 +20,12 @@ telegram:
 
 metrics:
   host: 0.0.0.0
-  port: 9100
+  port: 9101
   path: /metrics
 
 status:
   host: 0.0.0.0
-  port: 8000
+  port: 8001
   livenessPath: /live
   readinessPath: /ready
   versionPath: /version
