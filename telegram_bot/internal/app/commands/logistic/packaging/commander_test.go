@@ -15,119 +15,42 @@ func TestCommander_New(t *testing.T) {
 	command := "/new__logistic__package"
 
 	sucessTests := []struct {
-		name    string
-		message tgbotapi.Message
+		name string
+		args string
 	}{
 		{
 			name: "create with title",
-			message: tgbotapi.Message{
-				Text: command + " title",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " title",
 		}, // create with title
 		{
 			name: "create with title and weight",
-			message: tgbotapi.Message{
-				Text: command + " title 50",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " title 50",
 		}, // create with title and weight
 	}
 
 	failTests := []struct {
-		name    string
-		message tgbotapi.Message
+		name string
+		args string
 	}{
 		{
 			name: "create without arguments",
-			message: tgbotapi.Message{
-				Text: command + "",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: "",
 		}, // create without arguments
 		{
 			name: "create with title and weight where weight is not a number",
-			message: tgbotapi.Message{
-				Text: command + " title low",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " title low",
 		}, // create with title and weight where weight is not a number
 		{
 			name: "create with title and weight where weight very big",
-			message: tgbotapi.Message{
-				Text: command + " title 999999999999999999999999",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " title 999999999999999999999999",
 		}, // create with title and weight where weight very big
 		{
 			name: "create with title and weight where weight < 0",
-			message: tgbotapi.Message{
-				Text: command + " title -99",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " title -99",
 		}, // create with title and weight where weight < 0
 		{
 			name: "create with 3 arguments",
-			message: tgbotapi.Message{
-				Text: command + " title 50 20",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " title 50 20",
 		}, // create with 3 arguments
 	}
 
@@ -145,7 +68,20 @@ func TestCommander_New(t *testing.T) {
 
 			handler := NewCommander(&tgbotapi.BotAPI{}, service.NewPackageService(grpcMock))
 
-			handler.New(&tt.message)
+			message := tgbotapi.Message{
+				Text: command + tt.args,
+				Chat: &tgbotapi.Chat{
+					ID: 1,
+				},
+				Entities: []tgbotapi.MessageEntity{
+					{
+						Type:   "bot_command",
+						Length: len(command),
+					},
+				},
+			}
+
+			handler.New(&message)
 
 		})
 	}
@@ -160,7 +96,19 @@ func TestCommander_New(t *testing.T) {
 
 			handler := NewCommander(&tgbotapi.BotAPI{}, service.NewPackageService(grpcMock))
 
-			handler.New(&tt.message)
+			message := tgbotapi.Message{
+				Text: command + tt.args,
+				Chat: &tgbotapi.Chat{
+					ID: 1,
+				},
+				Entities: []tgbotapi.MessageEntity{
+					{
+						Type:   "bot_command",
+						Length: len(command),
+					},
+				},
+			}
+			handler.New(&message)
 
 		})
 	}
@@ -172,104 +120,38 @@ func TestCommander_Get(t *testing.T) {
 	command := "/get__logistic__package"
 
 	sucessTests := []struct {
-		name    string
-		message tgbotapi.Message
+		name string
+		args string
 	}{
 		{
 			name: "get with package id",
-			message: tgbotapi.Message{
-				Text: command + " 5",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " 5",
 		}, // get with package id
 	}
 
 	failTests := []struct {
-		name    string
-		message tgbotapi.Message
+		name string
+		args string
 	}{
 		{
 			name: "get without arguments",
-			message: tgbotapi.Message{
-				Text: command + "",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: "",
 		}, // get without arguments
 		{
 			name: "get with package id is not a number",
-			message: tgbotapi.Message{
-				Text: command + " id",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " id",
 		}, // get with package id is not a number
 		{
 			name: "get where package id very big",
-			message: tgbotapi.Message{
-				Text: command + " 999999999999999999999999",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " 999999999999999999999999",
 		}, // get where package id very big
 		{
 			name: "get where package id < 0",
-			message: tgbotapi.Message{
-				Text: command + " -99",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " -99",
 		}, // get where package id < 0
 		{
 			name: "get with 2 arguments",
-			message: tgbotapi.Message{
-				Text: command + " 50 20",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " 50 20",
 		}, // get with 2 arguments
 	}
 
@@ -287,7 +169,19 @@ func TestCommander_Get(t *testing.T) {
 
 			handler := NewCommander(&tgbotapi.BotAPI{}, service.NewPackageService(grpcMock))
 
-			handler.Get(&tt.message)
+			message := tgbotapi.Message{
+				Text: command + tt.args,
+				Chat: &tgbotapi.Chat{
+					ID: 1,
+				},
+				Entities: []tgbotapi.MessageEntity{
+					{
+						Type:   "bot_command",
+						Length: len(command),
+					},
+				},
+			}
+			handler.Get(&message)
 
 		})
 	}
@@ -302,7 +196,20 @@ func TestCommander_Get(t *testing.T) {
 
 			handler := NewCommander(&tgbotapi.BotAPI{}, service.NewPackageService(grpcMock))
 
-			handler.Get(&tt.message)
+			message := tgbotapi.Message{
+				Text: command + tt.args,
+				Chat: &tgbotapi.Chat{
+					ID: 1,
+				},
+				Entities: []tgbotapi.MessageEntity{
+					{
+						Type:   "bot_command",
+						Length: len(command),
+					},
+				},
+			}
+
+			handler.Get(&message)
 
 		})
 	}
@@ -314,104 +221,38 @@ func TestCommander_Delete(t *testing.T) {
 	command := "/delete__logistic__package"
 
 	sucessTests := []struct {
-		name    string
-		message tgbotapi.Message
+		name string
+		args string
 	}{
 		{
 			name: "delete with package id",
-			message: tgbotapi.Message{
-				Text: command + " 5",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " 5",
 		}, // delete with package id
 	}
 
 	failTests := []struct {
-		name    string
-		message tgbotapi.Message
+		name string
+		args string
 	}{
 		{
 			name: "delete without arguments",
-			message: tgbotapi.Message{
-				Text: command + "",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: "",
 		}, // delete without arguments
 		{
 			name: "delete with package id is not a number",
-			message: tgbotapi.Message{
-				Text: command + " id",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " id",
 		}, // delete with package id is not a number
 		{
 			name: "delete where package id very big",
-			message: tgbotapi.Message{
-				Text: command + " 999999999999999999999999",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " 999999999999999999999999",
 		}, // delete where package id very big
 		{
 			name: "delete where package id < 0",
-			message: tgbotapi.Message{
-				Text: command + " -99",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " -99",
 		}, // delete where package id < 0
 		{
 			name: "delete with 2 arguments",
-			message: tgbotapi.Message{
-				Text: command + " 50 20",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " 50 20",
 		}, // delete with 2 arguments
 	}
 
@@ -428,7 +269,20 @@ func TestCommander_Delete(t *testing.T) {
 
 			handler := NewCommander(&tgbotapi.BotAPI{}, service.NewPackageService(grpcMock))
 
-			handler.Delete(&tt.message)
+			message := tgbotapi.Message{
+				Text: command + tt.args,
+				Chat: &tgbotapi.Chat{
+					ID: 1,
+				},
+				Entities: []tgbotapi.MessageEntity{
+					{
+						Type:   "bot_command",
+						Length: len(command),
+					},
+				},
+			}
+
+			handler.Delete(&message)
 
 		})
 	}
@@ -443,7 +297,20 @@ func TestCommander_Delete(t *testing.T) {
 
 			handler := NewCommander(&tgbotapi.BotAPI{}, service.NewPackageService(grpcMock))
 
-			handler.Delete(&tt.message)
+			message := tgbotapi.Message{
+				Text: command + tt.args,
+				Chat: &tgbotapi.Chat{
+					ID: 1,
+				},
+				Entities: []tgbotapi.MessageEntity{
+					{
+						Type:   "bot_command",
+						Length: len(command),
+					},
+				},
+			}
+
+			handler.Delete(&message)
 
 		})
 	}
@@ -455,164 +322,54 @@ func TestCommander_Edit(t *testing.T) {
 	command := "/edit__logistic__package"
 
 	sucessTests := []struct {
-		name    string
-		message tgbotapi.Message
+		name string
+		args string
 	}{
 		{
 			name: "edit with package id and title",
-			message: tgbotapi.Message{
-				Text: command + " 5 title",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " 5 title",
 		}, // edit with package id and title
 		{
 			name: "edit with package id, title and weight",
-			message: tgbotapi.Message{
-				Text: command + " 5 title 100",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " 5 title 100",
 		}, // edit with package id, title and weight
 	}
 
 	failTests := []struct {
-		name    string
-		message tgbotapi.Message
+		name string
+		args string
 	}{
 		{
 			name: "edit without arguments",
-			message: tgbotapi.Message{
-				Text: command + "",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: "",
 		}, // edit without arguments
 		{
 			name: "edit where package id is not a number",
-			message: tgbotapi.Message{
-				Text: command + " id title",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " id title",
 		}, // edit where package id is not a number
 		{
 			name: "edit where package id very big",
-			message: tgbotapi.Message{
-				Text: command + " 999999999999999999999999 title",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " 999999999999999999999999 title",
 		}, // edit where package id very big
 		{
 			name: "edit where package id < 0",
-			message: tgbotapi.Message{
-				Text: command + " -99 title",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " -99 title",
 		}, // edit where package id < 0
 		{
 			name: "edit with 4 arguments",
-			message: tgbotapi.Message{
-				Text: command + " 50 title 20 20",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " 50 title 20 20",
 		}, // edit with 4 arguments
 		{
 			name: "edit where weight is not a number",
-			message: tgbotapi.Message{
-				Text: command + " 50 title low",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " 50 title low",
 		}, // edit where weight is not a number
 		{
 			name: "edit where weight very big",
-			message: tgbotapi.Message{
-				Text: command + " 50 title 999999999999999999999999",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " 50 title 999999999999999999999999",
 		}, // edit where weight very big
 		{
 			name: "edit where weight < 0",
-			message: tgbotapi.Message{
-				Text: command + " 50 title -99",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: " 50 title -99",
 		}, // edit where weight < 0
 	}
 
@@ -629,7 +386,20 @@ func TestCommander_Edit(t *testing.T) {
 
 			handler := NewCommander(&tgbotapi.BotAPI{}, service.NewPackageService(grpcMock))
 
-			handler.Edit(&tt.message)
+			message := tgbotapi.Message{
+				Text: command + tt.args,
+				Chat: &tgbotapi.Chat{
+					ID: 1,
+				},
+				Entities: []tgbotapi.MessageEntity{
+					{
+						Type:   "bot_command",
+						Length: len(command),
+					},
+				},
+			}
+
+			handler.Edit(&message)
 
 		})
 	}
@@ -644,7 +414,20 @@ func TestCommander_Edit(t *testing.T) {
 
 			handler := NewCommander(&tgbotapi.BotAPI{}, service.NewPackageService(grpcMock))
 
-			handler.Edit(&tt.message)
+			message := tgbotapi.Message{
+				Text: command + tt.args,
+				Chat: &tgbotapi.Chat{
+					ID: 1,
+				},
+				Entities: []tgbotapi.MessageEntity{
+					{
+						Type:   "bot_command",
+						Length: len(command),
+					},
+				},
+			}
+
+			handler.Edit(&message)
 
 		})
 	}
@@ -656,23 +439,12 @@ func TestCommander_List(t *testing.T) {
 	command := "/list__logistic__package"
 
 	sucessTests := []struct {
-		name    string
-		message tgbotapi.Message
+		name string
+		args string
 	}{
 		{
 			name: "list",
-			message: tgbotapi.Message{
-				Text: command + "",
-				Chat: &tgbotapi.Chat{
-					ID: 1,
-				},
-				Entities: []tgbotapi.MessageEntity{
-					{
-						Type:   "bot_command",
-						Length: len(command),
-					},
-				},
-			},
+			args: "",
 		}, // list
 	}
 
@@ -690,7 +462,20 @@ func TestCommander_List(t *testing.T) {
 
 			handler := NewCommander(&tgbotapi.BotAPI{}, service.NewPackageService(grpcMock))
 
-			handler.List(&tt.message)
+			message := tgbotapi.Message{
+				Text: command + tt.args,
+				Chat: &tgbotapi.Chat{
+					ID: 1,
+				},
+				Entities: []tgbotapi.MessageEntity{
+					{
+						Type:   "bot_command",
+						Length: len(command),
+					},
+				},
+			}
+
+			handler.List(&message)
 
 		})
 	}

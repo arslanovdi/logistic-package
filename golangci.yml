@@ -3731,11 +3731,11 @@ issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
     # Exclude some linters from running on tests files.
-    - path: _test\.go
-      linters:
+#    - path: _test\.go
+#      linters:
 #        - gocyclo
 #        - errcheck
-        - dupl
+#        - dupl
 #        - gosec
 
     # Run some linter only for test files by excluding its issues for everything else.
