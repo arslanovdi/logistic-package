@@ -10,7 +10,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-const mysubdomain = "package"
+const mySubDomain = "package"
 
 // PackageCommander интерфейс обрабатывающий команды логистики телеграм бота
 type PackageCommander interface {
@@ -38,7 +38,7 @@ func (c *Commander) HandleCallback(callback *tgbotapi.CallbackQuery, callbackPat
 	log := slog.With("func", "LogisticCommander.HandleCallback")
 
 	switch callbackPath.Subdomain {
-	case mysubdomain:
+	case mySubDomain:
 		c.packageCommander.HandleCallback(callback, callbackPath)
 	default:
 		log.Info("unknown subdomain", slog.String("subdomain", callbackPath.Subdomain))
@@ -51,7 +51,7 @@ func (c *Commander) HandleCommand(msg *tgbotapi.Message, commandPath path.Comman
 	log := slog.With("func", "LogisticCommander.HandleCommand")
 
 	switch commandPath.Subdomain {
-	case mysubdomain:
+	case mySubDomain:
 		c.packageCommander.HandleCommand(msg, commandPath)
 	default:
 		log.Info("unknown subdomain", slog.String("subdomain", commandPath.Subdomain))

@@ -3,7 +3,7 @@ package packaging
 import (
 	"encoding/json"
 	"errors"
-	"github.com/arslanovdi/logistic-package/telegram_bot/internal/model"
+	"github.com/arslanovdi/logistic-package/telegram_bot/internal/general"
 	"log/slog"
 	"strings"
 
@@ -13,7 +13,7 @@ import (
 
 // CallbackListData структура данных для обработки реакции на нажатие кнопки
 type CallbackListData struct {
-	Offset int `json:"offset"` // смещение, с которого выводятся записи в телеграм боте
+	Offset int `json:"offset"` // Смещение, с которого выводятся записи в телеграм боте
 }
 
 // CallbackList обработка реакции на нажатие кнопки
@@ -33,16 +33,16 @@ func (c *Commander) CallbackList(callback *tgbotapi.CallbackQuery, callbackPath 
 
 	outputMsgText := strings.Builder{}
 
-	packages, err := c.packageService.List(uint64(parsedData.Offset)+limit, limit) // Запрашиваем клиентов со смещением
+	packages, err := c.packageService.List(uint64(parsedData.Offset+limit), limit) // Запрашиваем клиентов со смещением
 
 	var endOfList bool
 
 	if err != nil {
-		if errors.Is(err, model.ErrNotFound) {
+		if errors.Is(err, general.ErrNotFound) {
 			c.errorResponseCallback(callback, "packages not found")
 			return
 		}
-		if errors.Is(err, model.ErrEndOfList) {
+		if errors.Is(err, general.ErrEndOfList) {
 			endOfList = true
 		} else {
 			c.errorResponseCallback(callback, "Ошибка получения списка")
@@ -60,9 +60,13 @@ func (c *Commander) CallbackList(callback *tgbotapi.CallbackQuery, callbackPath 
 	msg := tgbotapi.NewMessage(callback.Message.Chat.ID, outputMsgText.String())
 
 	if !endOfList {
-		serializedData, _ := json.Marshal(CallbackListData{ // данные сериализуемые в кнопку
+		serializedData, err1 := json.Marshal(CallbackListData{ // serialized data in button
 			Offset: parsedData.Offset + limit,
 		})
+		if err1 != nil {
+			c.errorResponseCallback(callback, "Error serializing data")
+			log.Error("Error serializing data", slog.String("error", err1.Error()))
+		}
 		callbackPath.CallbackData = string(serializedData)
 
 		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup( // добавляем кнопку в ответ
@@ -77,5 +81,5 @@ func (c *Commander) CallbackList(callback *tgbotapi.CallbackQuery, callbackPath 
 		log.Error("error sending reply message to chat", slog.String("error", err.Error()))
 	}
 
-	log.Debug("Callback List packages", slog.Uint64("offset", uint64(parsedData.Offset)+limit), slog.Uint64("limit", limit))
+	log.Debug("Callback List packages", slog.Uint64("offset", uint64(parsedData.Offset+limit)), slog.Uint64("limit", limit))
 }

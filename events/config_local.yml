@@ -29,4 +29,4 @@ kafka:
     - "localhost:29092"
     - "localhost:29093"
     - "localhost:29094"
-  schemaregistry:  "http://localhost:8081"
+  schemaRegistry:  "http://localhost:8081"

@@ -2,22 +2,12 @@
 package config
 
 import (
-	"fmt"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 )
 
 var cfg *Config
-
-// GetConfigInstance returns service config
-func GetConfigInstance() *Config {
-	if cfg != nil {
-		return cfg
-	}
-
-	return &Config{}
-}
 
 // Project - contains all parameters project information.
 type Project struct {
@@ -50,7 +40,7 @@ type Kafka struct {
 	Topic          string   `yaml:"topic"`
 	GroupID        string   `yaml:"groupId"`
 	Brokers        []string `yaml:"brokers"`
-	SchemaRegistry string   `yaml:"schemaregistry"`
+	SchemaRegistry string   `yaml:"schemaRegistry"`
 }
 
 // Status config for service.
@@ -71,23 +61,34 @@ type Config struct {
 	Status  Status  `yaml:"status"`
 }
 
+// GetConfigInstance returns service config
+func GetConfigInstance() *Config {
+	if cfg != nil {
+		return cfg
+	}
+
+	return &Config{}
+}
+
 // ReadConfigYML - read configurations from file and init instance Config.
-func ReadConfigYML(filePath string) error {
+func ReadConfigYML(filePath string) (err error) {
 	if cfg != nil {
 		return nil
 	}
 
 	file, err1 := os.Open(filepath.Clean(filePath))
 	if err1 != nil {
-		return fmt.Errorf("config.ReadConfigYML: %w", err1)
+		return err1
 	}
-	defer func() {
-		_ = file.Close()
-	}()
 
 	decoder := yaml.NewDecoder(file)
 	if err2 := decoder.Decode(&cfg); err2 != nil {
-		return fmt.Errorf("config.ReadConfigYML: %w", err2)
+		return err2
+	}
+
+	err3 := file.Close()
+	if err3 != nil {
+		return err3
 	}
 
 	return nil

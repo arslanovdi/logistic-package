@@ -33,7 +33,7 @@ type Database struct {
 	Password     string `yaml:"password"`
 	Migrations   string `yaml:"migrations"`
 	Name         string `yaml:"name"`
-	SslMode      string `yaml:"sslmode"`
+	Ssl          string `yaml:"ssl"`
 	Driver       string `yaml:"driver"`
 	QueryTimeout int    `yaml:"queryTimeout"`
 }
@@ -85,7 +85,7 @@ type Kafka struct {
 	GroupID        string   `yaml:"groupId"`
 	FlushTimeout   int      `yaml:"flushTimeout"`
 	Brokers        []string `yaml:"brokers"`
-	SchemaRegistry string   `yaml:"schemaregistry"`
+	SchemaRegistry string   `yaml:"schemaRegistry"`
 }
 
 type Outbox struct {

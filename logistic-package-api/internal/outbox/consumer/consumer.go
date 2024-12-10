@@ -31,7 +31,7 @@ type Consumer struct {
 
 // NewDbConsumer конструктор
 func NewDbConsumer(
-	repo repo.EventRepo,
+	r repo.EventRepo,
 	events chan<- []model.PackageEvent,
 	unlocks chan int64,
 	removes chan int64,
@@ -49,7 +49,7 @@ func NewDbConsumer(
 
 	c := Consumer{
 		events:       events,
-		repo:         repo,
+		repo:         r,
 		batchSize:    cfg.Outbox.BatchSize,
 		tick:         time.Second * time.Duration(cfg.Outbox.Ticker),
 		wg:           wg,
@@ -64,34 +64,22 @@ func NewDbConsumer(
 
 	// собирает батч событий для удаления из БД
 	go func() {
-		for {
-			select {
-			case event, ok := <-c.removes: // Получаем PackageEventID
-				if !ok {
-					return
-				}
-				c.removeEvents = append(c.removeEvents, event)
+		for event := range c.removes { // Получаем PackageEventID
+			c.removeEvents = append(c.removeEvents, event)
 
-				if c.eventsCount == len(c.removeEvents)+len(c.unlockEvents) { // когда кол-во отправленных в кафку событий станет равно кол-ву обработанных событий. Это произойдет только в одной из горутин.
-					c.batchprocessing()
-				}
+			if c.eventsCount == len(c.removeEvents)+len(c.unlockEvents) { // когда кол-во отправленных в кафку событий станет равно кол-ву обработанных событий. Это произойдет только в одной из горутин.
+				c.batchprocessing()
 			}
 		}
 	}()
 
 	// собирает батч событий для разблокировки повторной отправки в кафку
 	go func() {
-		for {
-			select {
-			case event, ok := <-c.unlocks: // Получаем PackageEventID
-				if !ok {
-					return
-				}
-				c.unlockEvents = append(c.unlockEvents, event)
+		for event := range c.unlocks { // Получаем PackageEventID
+			c.unlockEvents = append(c.unlockEvents, event)
 
-				if c.eventsCount == len(c.removeEvents)+len(c.unlockEvents) { // когда кол-во отправленных в кафку событий станет равно кол-ву обработанных событий. Это произойдет только в одной из горутин.
-					c.batchprocessing()
-				}
+			if c.eventsCount == len(c.removeEvents)+len(c.unlockEvents) { // когда кол-во отправленных в кафку событий станет равно кол-ву обработанных событий. Это произойдет только в одной из горутин.
+				c.batchprocessing()
 			}
 		}
 	}()

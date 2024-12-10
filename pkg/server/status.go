@@ -15,8 +15,8 @@ import (
 // StatusServer - http сервер для мониторинга состояния приложения
 type StatusServer struct {
 	server *http.Server
-	config StatusConfig
-	info   ProjectInfo
+	config *StatusConfig
+	info   *ProjectInfo
 }
 
 type StatusConfig struct {
@@ -37,7 +37,7 @@ type ProjectInfo struct {
 }
 
 // NewStatusServer - конструктор http сервера для мониторинга состояния приложения
-func NewStatusServer(isReady *atomic.Value, cfg StatusConfig, projectInfo ProjectInfo) *StatusServer {
+func NewStatusServer(isReady *atomic.Bool, cfg *StatusConfig, projectInfo *ProjectInfo) *StatusServer {
 
 	statusAddr := fmt.Sprintf("%s:%v", cfg.Host, cfg.Port)
 
@@ -93,9 +93,9 @@ func livenessHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func readinessHandler(isReady *atomic.Value) http.HandlerFunc {
+func readinessHandler(isReady *atomic.Bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
-		if isReady == nil || !isReady.Load().(bool) {
+		if isReady == nil || !isReady.Load() {
 			http.Error(w, http.StatusText(http.StatusServiceUnavailable), http.StatusServiceUnavailable)
 
 			return
@@ -104,7 +104,7 @@ func readinessHandler(isReady *atomic.Value) http.HandlerFunc {
 	}
 }
 
-func versionHandler(projectInfo ProjectInfo) func(w http.ResponseWriter, _ *http.Request) {
+func versionHandler(projectInfo *ProjectInfo) func(w http.ResponseWriter, _ *http.Request) {
 	return func(w http.ResponseWriter, _ *http.Request) {
 
 		log := slog.With("func", "versionHandler")

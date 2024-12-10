@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.7-labs
 #builder
 FROM golang:1.23.3-bullseye AS builder
 
@@ -13,8 +12,8 @@ COPY .. /home
 # собираем
 RUN make build-events
 
-# outbox
 
+# events
 FROM golang:1.23.3-bullseye AS server
 
 ARG GITHUB_PATH=github.com/arslanovdi/logistic-package/events

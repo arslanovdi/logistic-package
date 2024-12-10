@@ -9,3 +9,5 @@ scrape_configs:
       - targets:
         - logistic-package-api:9100
         - events:9100
+        - telegram_bot:9100
+        - retranslator:9100

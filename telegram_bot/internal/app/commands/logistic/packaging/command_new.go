@@ -1,8 +1,9 @@
 package packaging
 
 import (
+	"database/sql"
 	"fmt"
-	"github.com/arslanovdi/logistic-package/telegram_bot/internal/model"
+	"github.com/arslanovdi/logistic-package/pkg/model"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log/slog"
 	"strings"
@@ -27,21 +28,16 @@ func (c *Commander) New(message *tgbotapi.Message) {
 			log.Info("wrong args", slog.Any("args", args), slog.String("error", err.Error()))
 			err = fmt.Errorf("wrong args %v", args)
 		}
-		/*if len(pkg.Title) == 0 {
-			log.Info("wrong args", slog.Any("args", args), slog.String("error", "Title is ''"))
-			err = fmt.Errorf("wrong args %v", args)
-		}*/
 	case 1:
-		pkg.Weight = new(uint64)
-		_, err = fmt.Sscanf(args, "%s %d", &pkg.Title, pkg.Weight)
+		pkg.Weight = sql.NullInt64{
+			Int64: 0,
+			Valid: true,
+		}
+		_, err = fmt.Sscanf(args, "%s %d", &pkg.Title, pkg.Weight.Int64)
 		if err != nil {
 			log.Info("wrong args", slog.Any("args", args), slog.String("error", err.Error()))
 			err = fmt.Errorf("wrong args %v", args)
 		}
-		/*if len(pkg.Title) == 0 || *pkg.Weight == 0 {
-			log.Info("wrong args", slog.Any("args", args), slog.String("error", "Title is ''"))
-			err = fmt.Errorf("wrong args %v", args)
-		}*/
 	default:
 		log.Info("wrong args count", slog.Any("args", args))
 		err = fmt.Errorf("wrong args %v", args)
@@ -54,7 +50,7 @@ func (c *Commander) New(message *tgbotapi.Message) {
 
 	pkg.Created = time.Now()
 
-	id, err := c.packageService.Create(pkg)
+	id, err := c.packageService.Create(&pkg)
 
 	if err != nil {
 		c.errorResponseCommand(message, fmt.Sprintf("Fail to create package with title %v", pkg.Title))

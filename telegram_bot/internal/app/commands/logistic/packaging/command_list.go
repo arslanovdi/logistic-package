@@ -3,7 +3,7 @@ package packaging
 import (
 	"encoding/json"
 	"errors"
-	"github.com/arslanovdi/logistic-package/telegram_bot/internal/model"
+	"github.com/arslanovdi/logistic-package/telegram_bot/internal/general"
 	"log/slog"
 	"strings"
 
@@ -23,11 +23,11 @@ func (c *Commander) List(message *tgbotapi.Message) {
 	var endOfList bool
 
 	if err != nil {
-		if errors.Is(err, model.ErrNotFound) {
+		if errors.Is(err, general.ErrNotFound) {
 			c.errorResponseCommand(message, "packages not found")
 			return
 		}
-		if errors.Is(err, model.ErrEndOfList) {
+		if errors.Is(err, general.ErrEndOfList) {
 			endOfList = true
 		} else {
 			c.errorResponseCommand(message, "Ошибка получения списка")
@@ -44,9 +44,15 @@ func (c *Commander) List(message *tgbotapi.Message) {
 	msg := tgbotapi.NewMessage(message.Chat.ID, outputMsgText.String())
 
 	if !endOfList {
-		serializedData, _ := json.Marshal(CallbackListData{ // данные сериализуемые в кнопку
+		serializedData, err1 := json.Marshal(CallbackListData{ // serialized data in button
 			Offset: 1,
 		})
+
+		if err1 != nil {
+			c.errorResponseCommand(message, "Error serializing data")
+			log.Error("Error serializing data", slog.String("error", err1.Error()))
+			return
+		}
 
 		callbackPath := path.CallbackPath{ // собираем структуру кнопки
 			Domain:       "logistic",

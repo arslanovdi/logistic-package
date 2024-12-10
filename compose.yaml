@@ -11,6 +11,8 @@ services:
         tag: logistic-package-api
     networks:
       - ompnw
+    ports:
+      - "8082:8082"
     depends_on:
       postgres:
         condition: service_healthy  # ждем полного запуска Postgres
@@ -18,14 +20,6 @@ services:
         condition: service_healthy  # ждем полного запуска Graylog
       jaeger:
         condition: service_started # ждем полного запуска Jaeger
-    links:                  # определяет сетевую ссылку на контейнеры в другом сервисе, они не нужны для взаимодействия. Они выражают неявную зависимость между службами и влияют на порядок запуска служб.
-      - postgres
-      - jaeger
-#    ports:
-#      - "8080:8080"     # REST
-#      - "8082:8082"     # gRPC
-#      - "9100:9100"     # Metrics prometheus
-#      - "8000:8000"     # Status
     healthcheck:
       test: [ 'CMD', 'curl', '-f', 'http://localhost:8000/live' ]
       interval: 1m
@@ -63,17 +57,6 @@ services:
         condition: service_healthy  # ждем полного запуска Kafka
       schemaregistry1:
         condition: service_started  # ждем полного запуска Kafka
-      logistic-package-api:
-        condition: service_healthy
-    links: # определяет сетевую ссылку на контейнеры в другом сервисе, они не нужны для взаимодействия. Они выражают неявную зависимость между службами и влияют на порядок запуска служб.
-      - postgres
-      - jaeger
-      - kafka1
-      - kafka2
-      - kafka3
-#    ports:
-            #- "9100:9100"     # Metrics prometheus
-#      - "8001:8000"     # Status
     healthcheck:
       test: [ 'CMD', 'curl', '-f', 'http://localhost:8000/live' ]
       interval: 1m
@@ -98,9 +81,8 @@ services:
     depends_on:
       logistic-package-api:
         condition: service_healthy
-    #ports:
-      #- "9100:9100"     # Metrics prometheus
-      #- "8000:8000"     # Status
+      graylog:
+        condition: service_healthy  # ждем полного запуска Graylog
     healthcheck:
       test: [ 'CMD', 'curl', '-f', 'http://localhost:8000/live' ]
       interval: 1m
@@ -131,9 +113,8 @@ services:
         condition: service_healthy
       schemaregistry1:
         condition: service_started
-      #ports:
-      #- "9100:9100"     # Metrics prometheus
-      #- "8000:8000"     # Status
+      graylog:
+        condition: service_healthy  # ждем полного запуска Graylog
     healthcheck:
       test: [ 'CMD', 'curl', '-f', 'http://localhost:8000/live' ]
       interval: 1m
@@ -204,10 +185,11 @@ services:
         tag: grafana
     ports:
       - "3000:3000"
-    links:
-      - prometheus
     networks:
       - ompnw
+    depends_on:
+      graylog:
+        condition: service_healthy  # ждем полного запуска Graylog
     volumes:
       - "grafana_storage:/var/lib/grafana"
 
@@ -239,9 +221,6 @@ services:
         hard: 65536
     volumes:
       - opensearch-data:/usr/share/opensearch/data    # Creates volume called opensearch-data1 and mounts it to the container
-    ports:
-      - "9200:9200"   # REST API
-      - "9600:9600"   # Performance Analyzer
     networks:
       - ompnw         # All the containers will join the same Docker bridge network
 
@@ -263,7 +242,7 @@ services:
         condition: service_started
 
   graylog:
-    image: graylog/graylog:6.1.3-1
+    image: graylog/graylog:6.1.4-1
     restart: unless-stopped
     volumes:
       - graylog_data:/usr/share/graylog/data
@@ -281,9 +260,6 @@ services:
     entrypoint: /usr/bin/tini -- wait-for-it opensearch-node:9200 -- /docker-entrypoint.sh
     networks:
       - ompnw
-    links:
-      - mongo
-      - opensearch-node
     depends_on:
       mongo:
         condition: service_started
@@ -342,12 +318,19 @@ services:
     image: confluentinc/cp-schema-registry:7.7.1
     hostname: schemaregistry1
     container_name: schemaregistry1
+    logging:
+      driver: 'gelf'
+      options:
+        gelf-address: 'udp://127.0.0.1:12201'
+        tag: schemaregistry1
     depends_on:
       kafka1:
         condition: service_healthy
       kafka2:
         condition: service_healthy
       kafka3:
+        condition: service_healthy
+      graylog:
         condition: service_healthy
     ports:
       - "8081:8081"

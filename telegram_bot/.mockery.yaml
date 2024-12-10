@@ -1,15 +1,18 @@
 quiet: False  # не выводить предупреждения
+
 disable-version-string: True
+
+issue-845-fix: True
+
 with-expecter: True # генерировать expecter, рекомендовано включить
+
 dir: "mocks/"
 mockname: "{{.InterfaceName}}"  # имя сгенерированного интерфейса
 filename: "{{.MockName}}.go"  # имя файла
+
 outpkg: mocks # пакет со сгенерированными интерфейсами
-tags: "custom1"
+
 packages:
-  github.com/arslanovdi/logistic-package/logistic-package-api/internal/outbox/repo:
+  github.com/arslanovdi/logistic-package/telegram_bot/internal/service:
     interfaces:
-      EventRepo:
-  github.com/arslanovdi/logistic-package/logistic-package-api/internal/outbox/sender:
-    interfaces:
-      EventSender:
+      Client:

@@ -39,7 +39,7 @@ database:
   user: logistic
   password: P@$$w0rd
   name: logistic_package_api
-  sslmode: disable
+  ssl: disable
   migrations: logistic-package-api/migrations
   driver: pgx
   queryTimeout: 5 # seconds query timeout
@@ -53,9 +53,9 @@ kafka:
     - "localhost:29092" #- "kafka1:9092" #
     - "localhost:29093" #- "kafka2:9092" #
     - "localhost:29094" #- "kafka3:9092" #
-  schemaregistry:  "http://localhost:8081" #"http://schemaregistry1:8081"
+  schemaRegistry:  "http://localhost:8081" #"http://schemaregistry1:8081"
 
 outbox:
   batchSize: 100    # кол-во событий получаемых за один запрос из БД
   ticker: 10        # load events every ticker seconds
-  producerCount: 20 # кол-во горутин продюсеров, отправляющих в кафку
+  producerCount: 20 # кол-во потоков, отправляющих в кафку

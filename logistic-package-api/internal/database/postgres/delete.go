@@ -36,7 +36,7 @@ func (r *Repo) Delete(ctx context.Context, id uint64) error {
 	pi := psql.Insert("package_events")
 
 	if span.IsSampled() {
-		pi = pi.Columns("package_id", "type", "trace_id").
+		pi = pi.Columns("package_id", "type", "traceid").
 			Values(id, model.Removed, traceid)
 	} else {
 		pi = pi.Columns("package_id", "type").
@@ -66,7 +66,7 @@ func (r *Repo) Delete(ctx context.Context, id uint64) error {
 		}
 
 		_, err = tx.Exec(ctx, queryEvent, argsEvent...)
-		//_, err = r.dbpool.Exec(ctx, queryEvent, argsEvent...)
+
 		if err != nil {
 			return err
 		}

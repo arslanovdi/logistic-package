@@ -27,8 +27,8 @@ type Producer struct {
 
 // NewProducer конструктор
 func NewProducer(
-	sender sender.EventSender,
-	repo repo.EventRepo,
+	s sender.EventSender,
+	r repo.EventRepo,
 	events <-chan []model.PackageEvent,
 	unlocks chan int64,
 	removes chan int64,
@@ -45,9 +45,9 @@ func NewProducer(
 
 	return &Producer{
 		n:       cfg.Outbox.ProducerCount,
-		sender:  sender,
+		sender:  s,
 		events:  events,
-		repo:    repo,
+		repo:    r,
 		wg:      wg,
 		stop:    stop,
 		unlocks: unlocks,

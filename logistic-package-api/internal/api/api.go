@@ -6,13 +6,12 @@ import (
 	"errors"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/general"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/service"
+	pb "github.com/arslanovdi/logistic-package/pkg/logistic-package-api"
 	"github.com/arslanovdi/logistic-package/pkg/model"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"log/slog"
-
-	pb "github.com/arslanovdi/logistic-package/pkg/logistic-package-api"
 )
 
 // PackageAPI имплементация grpc сервера
@@ -38,7 +37,7 @@ func (p *PackageAPI) CreateV1(ctx context.Context, req *pb.CreateRequestV1) (*pb
 	pkg := model.Package{}
 	pkg.FromProto(req.Value)
 
-	id, err1 := p.packageService.Create(ctx, pkg)
+	id, err1 := p.packageService.Create(ctx, &pkg)
 	if err1 != nil {
 		log.Error("CreateV1 - failed", slog.String("error", err1.Error()))
 		return nil, status.Error(codes.Internal, err1.Error())
@@ -165,7 +164,7 @@ func (p *PackageAPI) UpdateV1(ctx context.Context, req *pb.UpdateV1Request) (*pb
 	pkg := model.Package{}
 	pkg.FromProto(req.Value)
 
-	err1 := p.packageService.Update(ctx, pkg)
+	err1 := p.packageService.Update(ctx, &pkg)
 	if err1 != nil {
 		if errors.Is(err1, general.ErrNotFound) {
 			log.Debug("package not found", slog.Uint64("id", pkg.ID))

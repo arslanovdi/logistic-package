@@ -1,6 +1,6 @@
 project:
   name: Logistic Package API
-  debug: true
+  debug: false
   environment: development
   instance: "logistic-package-api-1"
   startupTimeout: 60  # seconds
@@ -39,7 +39,7 @@ database:
   user: logistic
   password: P@$$w0rd
   name: logistic_package_api
-  sslmode: disable
+  ssl: disable
   migrations: migrations
   driver: pgx
   queryTimeout: 5 # seconds query timeout
@@ -53,9 +53,9 @@ kafka:
     - "kafka1:9091"
     - "kafka2:9091"
     - "kafka3:9091"
-  schemaregistry:  "http://schemaregistry1:8081"
+  schemaRegistry:  "http://schemaregistry1:8081"
 
 outbox:
   batchSize: 100    # кол-во событий получаемых за один запрос из БД
   ticker: 10        # load events every ticker seconds
-  producerCount: 20 # кол-во горутин продюсеров, отправляющих в кафку
+  producerCount: 20 # кол-во потоков, отправляющих в кафку

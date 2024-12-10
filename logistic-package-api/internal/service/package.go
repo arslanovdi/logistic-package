@@ -9,11 +9,11 @@ import (
 
 // Repo interface for work with database
 type Repo interface {
-	Create(ctx context.Context, pkg model.Package) (*uint64, error)
+	Create(ctx context.Context, pkg *model.Package) (*uint64, error)
 	Delete(ctx context.Context, id uint64) error
 	Get(ctx context.Context, id uint64) (*model.Package, error)
-	List(ctx context.Context, offset uint64, limit uint64) ([]model.Package, error)
-	Update(ctx context.Context, pkg model.Package) error
+	List(ctx context.Context, offset, limit uint64) ([]model.Package, error)
+	Update(ctx context.Context, pkg *model.Package) error
 }
 
 // PackageService is service for Package
@@ -22,7 +22,7 @@ type PackageService struct {
 }
 
 // Create - создание нового пакета
-func (p *PackageService) Create(ctx context.Context, pkg model.Package) (*uint64, error) {
+func (p *PackageService) Create(ctx context.Context, pkg *model.Package) (*uint64, error) {
 
 	id, err := p.repo.Create(ctx, pkg)
 	if err != nil {
@@ -54,7 +54,7 @@ func (p *PackageService) Get(ctx context.Context, id uint64) (*model.Package, er
 }
 
 // List - получение списка пакетов
-func (p *PackageService) List(ctx context.Context, offset uint64, limit uint64) ([]model.Package, error) {
+func (p *PackageService) List(ctx context.Context, offset, limit uint64) ([]model.Package, error) {
 
 	packages, err := p.repo.List(ctx, offset, limit)
 	if err != nil {
@@ -64,7 +64,7 @@ func (p *PackageService) List(ctx context.Context, offset uint64, limit uint64) 
 }
 
 // Update - изменение пакета
-func (p *PackageService) Update(ctx context.Context, pkg model.Package) error {
+func (p *PackageService) Update(ctx context.Context, pkg *model.Package) error {
 
 	err := p.repo.Update(ctx, pkg)
 	if err != nil {
@@ -74,7 +74,7 @@ func (p *PackageService) Update(ctx context.Context, pkg model.Package) error {
 }
 
 // NewPackageService - конструктор
-func NewPackageService( /*dbpool *pgxpool.Pool, */ repo Repo) *PackageService {
+func NewPackageService(repo Repo) *PackageService {
 	return &PackageService{
 		repo: repo,
 	}

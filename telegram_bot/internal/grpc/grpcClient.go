@@ -13,7 +13,7 @@ import (
 
 import pb "github.com/arslanovdi/logistic-package/pkg/logistic-package-api"
 
-// Client - структура имплементирует интерфейс GrpcClient
+// Client - GrpcClient
 type Client struct {
 	send pb.LogisticPackageApiServiceClient
 	conn *grpc.ClientConn
@@ -30,7 +30,6 @@ func NewGrpcClient() *Client {
 	conn, err := grpc.NewClient(
 		cfg.GRPC.Host+":"+cfg.GRPC.Port,
 		grpc.WithStatsHandler(otelgrpc.NewClientHandler()), // Трассировка
-		//grpc.WithBlock(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 

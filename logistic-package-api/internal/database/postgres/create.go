@@ -12,7 +12,7 @@ import (
 )
 
 // Create - create new package in database
-func (r *Repo) Create(ctx context.Context, pkg model.Package) (*uint64, error) {
+func (r *Repo) Create(ctx context.Context, pkg *model.Package) (*uint64, error) {
 
 	log := slog.With("func", "postgres.Create")
 
@@ -37,7 +37,7 @@ func (r *Repo) Create(ctx context.Context, pkg model.Package) (*uint64, error) {
 
 	err2 := pgx.BeginFunc(ctx, r.dbpool, func(tx pgx.Tx) error { // Запускаем транзакцию
 		err := tx.QueryRow(ctx, query, args...).Scan(&pkg.ID)
-		//err := r.dbpool.QueryRow(ctx, query, args...).Scan(&pkg.ID)
+
 		if err != nil {
 			return err
 		}

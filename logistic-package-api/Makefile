@@ -1,16 +1,7 @@
-GO_VERSION_SHORT:=$(shell echo `go version` | sed -E 's/.* go(.*) .*/\1/g')
-ifneq ("1.22","$(shell printf "$(GO_VERSION_SHORT)\n1.22" | sort -V | head -1)")
-$(error NEED GO VERSION >= 1.22. Found: $(GO_VERSION_SHORT))
-endif
-
 export GO111MODULE=on
-
-SERVICE_NAME=logistic-package-api
-SERVICE_PATH=arslanovdi/logistic-package/logistic-package-api
 
 PGV_VERSION:="v1.1.0"
 BUF_VERSION:="v1.47.2"
-GCC_VERSION="14.2.0"
 
 OS_NAME=$(shell uname -s)
 OS_ARCH=$(shell uname -m)
@@ -20,21 +11,6 @@ BUF_EXE=$(GO_BIN)/buf$(shell go env GOEXE)
 ifeq ("NT", "$(findstring NT,$(OS_NAME))")
 OS_NAME=Linux
 endif
-
-.PHONY: run
-run:
-	go run cmd/grpc-server/main.go
-
-.PHONY: lint
-lint:
-	golangci-lint run ./...
-
-
-.PHONY: test
-test:
-	go test -v -race -timeout 30s -coverprofile cover.out ./...
-	go tool cover -func cover.out | grep total | awk '{print $$3}'
-# ----------------------------------------------------------------
 
 .PHONY: generate
 generate-go: .generate-install-buf .generate-go

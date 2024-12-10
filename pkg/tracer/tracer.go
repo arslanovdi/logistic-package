@@ -19,7 +19,7 @@ type Tracer struct {
 }
 
 // NewTracer инициализация трассировки
-func NewTracer(ctx context.Context, instance string, endpoint string) (*Tracer, error) {
+func NewTracer(ctx context.Context, instance, endpoint string) (*Tracer, error) {
 	exporter, provider, err := initOtel(ctx, instance, endpoint)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (t *Tracer) Shutdown(ctx context.Context) error {
 }
 
 // initOtel init configures an OpenTelemetry exporter and trace provider.
-func initOtel(ctx context.Context, instance string, endpoint string) (sdktrace.SpanExporter, *sdktrace.TracerProvider, error) {
+func initOtel(ctx context.Context, instance, endpoint string) (sdktrace.SpanExporter, *sdktrace.TracerProvider, error) {
 
 	exporter, err := otlptracegrpc.New( // grpc экспортер
 		ctx,
@@ -69,8 +69,8 @@ func initOtel(ctx context.Context, instance string, endpoint string) (sdktrace.S
 		sdktrace.WithBatcher(exporter),
 		sdktrace.WithSampler(
 			sdktrace.AlwaysSample(),
-			//trace.ParentBased(trace.TraceIDRatioBased(0.2)), // если нет родительского семплера, то 20% сэмплируем, иначе используем родительский
-			//trace.NeverSample(),
+			// trace.ParentBased(trace.TraceIDRatioBased(0.2)), // если нет родительского семплера, то 20% сэмплируем, иначе используем родительский
+			// trace.NeverSample(),
 		),
 	)
 

@@ -3,7 +3,7 @@ package packaging
 import (
 	"errors"
 	"fmt"
-	"github.com/arslanovdi/logistic-package/telegram_bot/internal/model"
+	"github.com/arslanovdi/logistic-package/telegram_bot/internal/general"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log/slog"
 )
@@ -26,7 +26,7 @@ func (c *Commander) Delete(message *tgbotapi.Message) {
 	err = c.packageService.Delete(id)
 	if err != nil {
 		log.Error("fail to delete package", slog.Uint64("id", id), slog.String("error", err.Error()))
-		if errors.Is(err, model.ErrNotFound) {
+		if errors.Is(err, general.ErrNotFound) {
 			c.errorResponseCommand(message, "Package not found")
 			return
 		}

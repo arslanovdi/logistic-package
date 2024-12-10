@@ -85,7 +85,6 @@ func main() {
 			log.Warn("Migration failed", slog.String("error", err.Error()))
 			os.Exit(1)
 		}
-		//fakedata.Generate(100, repo)
 	}
 
 	ctxTrace, cancelTrace := context.WithTimeout(context.Background(), starttimeout)
@@ -100,7 +99,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	isReady := &atomic.Value{}
+	isReady := &atomic.Bool{}
+
 	isReady.Store(false)
 
 	go func() { // TODO отсечка статус сервера
@@ -114,14 +114,14 @@ func main() {
 
 	statusServer := pkgserver.NewStatusServer(
 		isReady,
-		pkgserver.StatusConfig{
+		&pkgserver.StatusConfig{
 			Host:          cfg.Status.Host,
 			Port:          cfg.Status.Port,
 			LivenessPath:  cfg.Status.LivenessPath,
 			ReadinessPath: cfg.Status.ReadinessPath,
 			VersionPath:   cfg.Status.VersionPath,
 		},
-		pkgserver.ProjectInfo{
+		&pkgserver.ProjectInfo{
 			Name:        cfg.Project.Name,
 			Debug:       cfg.Project.Debug,
 			Environment: cfg.Project.Environment,
@@ -132,7 +132,7 @@ func main() {
 	)
 	statusServer.Start()
 
-	mcfg := pkgserver.MetricsConfig{
+	mcfg := &pkgserver.MetricsConfig{
 		Host: cfg.Metrics.Host,
 		Port: cfg.Metrics.Port,
 		Path: cfg.Metrics.Path,

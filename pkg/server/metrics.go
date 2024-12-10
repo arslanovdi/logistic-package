@@ -15,7 +15,7 @@ import (
 // MetricsServer - http сервер для метрик
 type MetricsServer struct {
 	server *http.Server
-	config MetricsConfig
+	config *MetricsConfig
 }
 
 type MetricsConfig struct {
@@ -25,7 +25,7 @@ type MetricsConfig struct {
 }
 
 // NewMetricsServer returns http server for metrics
-func NewMetricsServer(cfg MetricsConfig) *MetricsServer {
+func NewMetricsServer(cfg *MetricsConfig) *MetricsServer {
 
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 

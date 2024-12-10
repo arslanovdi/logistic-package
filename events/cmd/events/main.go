@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	starttimeout = 5 * time.Second
+	startTimeout = 5 * time.Second
 )
 
 type PackageConsumer interface {
@@ -73,7 +73,7 @@ func main() {
 		slog.String("instance", cfg.Project.Instance),
 	)
 
-	ctxTrace, cancelTrace := context.WithTimeout(context.Background(), starttimeout)
+	ctxTrace, cancelTrace := context.WithTimeout(context.Background(), startTimeout)
 	defer cancelTrace()
 
 	trace, err := tracer.NewTracer(
@@ -85,19 +85,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	isReady := &atomic.Value{}
+	isReady := &atomic.Bool{}
 	isReady.Store(false)
 
 	statusServer := server.NewStatusServer(
 		isReady,
-		server.StatusConfig{
+		&server.StatusConfig{
 			Host:          cfg.Status.Host,
 			Port:          cfg.Status.Port,
 			LivenessPath:  cfg.Status.LivenessPath,
 			ReadinessPath: cfg.Status.ReadinessPath,
 			VersionPath:   cfg.Status.VersionPath,
 		},
-		server.ProjectInfo{
+		&server.ProjectInfo{
 			Name:        cfg.Project.Name,
 			Debug:       cfg.Project.Debug,
 			Environment: cfg.Project.Environment,
@@ -108,15 +108,16 @@ func main() {
 	)
 	statusServer.Start()
 
-	mcfg := server.MetricsConfig{
+	metricsConfig := &server.MetricsConfig{
 		Host: cfg.Metrics.Host,
 		Port: cfg.Metrics.Port,
 		Path: cfg.Metrics.Path,
 	}
-	metricsServer := server.NewMetricsServer(mcfg)
+	metricsServer := server.NewMetricsServer(metricsConfig)
 	metricsServer.Start()
 
-	kafka, err := consumer.NewKafkaConsumer()
+	var kafka PackageConsumer
+	kafka, err = consumer.NewKafkaConsumer()
 	if err != nil {
 		log.Warn("Failed to init kafka consumer", slog.String("error", err.Error()))
 		os.Exit(1)
@@ -131,7 +132,7 @@ func main() {
 			if err != nil {
 				log.Error("kafka consumer error", slog.String("error", err.Error()))
 			}
-			time.Sleep(starttimeout)
+			time.Sleep(startTimeout)
 		}
 
 	}()

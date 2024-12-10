@@ -22,7 +22,7 @@ type LogisticCommander interface {
 // Router - роутер для обработки сообщений телеграм бота
 type Router struct {
 	bot               *tgbotapi.BotAPI
-	logisticCommander LogisticCommander // экземпляр интерфейса обрабатывающий сообщения телеграм бота
+	logisticCommander LogisticCommander // Экземпляр интерфейса обрабатывающий сообщения телеграм бота
 }
 
 // New конструктор
@@ -37,11 +37,11 @@ func New(
 }
 
 // HandleUpdate обработка сообщений телеграм бота
-func (c *Router) HandleUpdate(update tgbotapi.Update) {
+func (c *Router) HandleUpdate(update *tgbotapi.Update) {
 
 	log := slog.With("func", "Router.HandleUpdate")
 
-	defer func() { // рековер исключений, чтобы бот не умер
+	defer func() { // recover, чтобы бот не умер
 		if panicValue := recover(); panicValue != nil {
 			log.Warn("recovered from panic", slog.Any("panic value", panicValue), slog.String("stack", string(debug.Stack())))
 		}

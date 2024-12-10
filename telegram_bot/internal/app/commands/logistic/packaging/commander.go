@@ -8,7 +8,7 @@ import (
 	"log/slog"
 )
 
-const limit = 10 // кол-во package выдаваемое за 1 раз
+const limit = 10 // Кол-во package выдаваемое за 1 раз
 const list = "list"
 
 // Commander структура обработчика команд работы с пакетами телеграм бота
@@ -18,15 +18,15 @@ type Commander struct {
 }
 
 // NewCommander конструктор
-func NewCommander(bot *tgbotapi.BotAPI, service *service.LogisticPackageService) *Commander {
+func NewCommander(bot *tgbotapi.BotAPI, s *service.LogisticPackageService) *Commander {
 
 	return &Commander{
 		bot:            bot,
-		packageService: service,
+		packageService: s,
 	}
 }
 
-// HandleCallback перебор кнопок и вызов соттветствующего обработчика
+// HandleCallback перебор кнопок и вызов обработчика
 func (c *Commander) HandleCallback(callback *tgbotapi.CallbackQuery, callbackPath path.CallbackPath) {
 
 	log := slog.With("func", "PackageCommander.HandleCallback")
@@ -39,7 +39,7 @@ func (c *Commander) HandleCallback(callback *tgbotapi.CallbackQuery, callbackPat
 	}
 }
 
-// HandleCommand перебор команд и вызов соттветствующего обработчика
+// HandleCommand перебор команд и вызов обработчика
 func (c *Commander) HandleCommand(msg *tgbotapi.Message, commandPath path.CommandPath) {
 	switch commandPath.CommandName {
 	case "help":

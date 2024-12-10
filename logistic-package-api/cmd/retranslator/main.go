@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	starttimeout = 5 * time.Second
+	startTimeout = 5 * time.Second
 )
 
 func main() {
@@ -68,7 +68,7 @@ func main() {
 		slog.String("environment", cfg.Project.Environment),
 	)
 
-	ctxTrace, cancelTrace := context.WithTimeout(context.Background(), starttimeout)
+	ctxTrace, cancelTrace := context.WithTimeout(context.Background(), startTimeout)
 	defer cancelTrace()
 
 	trace, err1 := server2.NewTracer(ctxTrace, cfg.Project.Name+" "+"Retranslator", cfg.Jaeger.Host+cfg.Jaeger.Port)
@@ -77,18 +77,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	isReady := &atomic.Value{}
+	isReady := &atomic.Bool{}
 	isReady.Store(false)
 	statusServer := pkgserver.NewStatusServer(
 		isReady,
-		pkgserver.StatusConfig{
+		&pkgserver.StatusConfig{
 			Host:          cfg.Status.Host,
 			Port:          cfg.Status.Port,
 			LivenessPath:  cfg.Status.LivenessPath,
 			ReadinessPath: cfg.Status.ReadinessPath,
 			VersionPath:   cfg.Status.VersionPath,
 		},
-		pkgserver.ProjectInfo{
+		&pkgserver.ProjectInfo{
 			Name:        cfg.Project.Name,
 			Debug:       cfg.Project.Debug,
 			Environment: cfg.Project.Environment,
@@ -100,18 +100,18 @@ func main() {
 	statusServer.Start()
 
 	go func() { // TODO отсечка статус сервера
-		time.Sleep(starttimeout)
+		time.Sleep(startTimeout)
 		isReady.Store(true)
 		log.Info("The service is ready to accept requests")
 	}()
 
-	/*mcfg := pkgserver.MetricsConfig{
+	mcfg := &pkgserver.MetricsConfig{
 		Host: cfg.Metrics.Host,
 		Port: cfg.Metrics.Port,
 		Path: cfg.Metrics.Path,
 	}
 	metricsServer := pkgserver.NewMetricsServer(mcfg)
-	metricsServer.Start()*/
+	metricsServer.Start()
 
 	dbpool := database.MustGetPgxPool(context.Background())
 
@@ -140,7 +140,7 @@ func main() {
 
 	OutboxRetranslator.Stop()
 
-	//metricsServer.Stop(ctxShutdown)
+	metricsServer.Stop(ctxShutdown)
 
 	err := kafka.Close()
 	if err != nil {

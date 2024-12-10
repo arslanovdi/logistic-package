@@ -6,7 +6,6 @@ import (
 
 type record struct {
 	time time.Time
-	prev *record
 	next *record
 }
 
@@ -31,7 +30,6 @@ func (c *TimeAvg) Add() int {
 		}
 		end.next = &record{
 			time: time.Now(),
-			prev: end,
 		}
 	}
 	c.count++
@@ -41,7 +39,7 @@ func (c *TimeAvg) Add() int {
 	return c.count
 }
 
-// actualize Удаляет события посчитанные раньше, чем Duration назад
+// Удаляет события посчитанные раньше, чем Duration назад
 func (c *TimeAvg) actualize() {
 	pointer := c.root
 	for pointer != nil && pointer.time.Before(time.Now().Add(-c.Duration)) {
@@ -49,8 +47,4 @@ func (c *TimeAvg) actualize() {
 		c.count--
 	}
 	c.root = pointer
-}
-
-func (c *TimeAvg) Count() int {
-	return c.count
 }

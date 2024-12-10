@@ -15,7 +15,7 @@ import (
 )
 
 // Update - update package by id in database
-func (r *Repo) Update(ctx context.Context, pkg model.Package) error {
+func (r *Repo) Update(ctx context.Context, pkg *model.Package) error {
 
 	log := slog.With("func", "postgres.Update")
 

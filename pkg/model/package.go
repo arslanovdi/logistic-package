@@ -7,6 +7,7 @@ import (
 	"fmt"
 	pb "github.com/arslanovdi/logistic-package/pkg/logistic-package-api"
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"log/slog"
 	"strings"
 	"time"
@@ -66,14 +67,15 @@ func (e EventType) String() string {
 
 func (p *PackageEvent) String() string {
 
-	//str := fmt.Sprintf("Package № %s %s. Package: %s", p.PackageID, p.Type, p.Payload)
+	log := slog.With("func", "model.PackageEvent.String")
 
 	pkg := &Package{}
-	json.Unmarshal(p.Payload, pkg)
+	err := json.Unmarshal(p.Payload, pkg)
+	if err != nil {
+		log.Error("Failed to unmarshal payload", slog.String("error", err.Error()))
+	}
 
-	str := fmt.Sprintf("Package № %d %s. Package: %s", p.PackageID, p.Type, pkg)
-
-	return str
+	return fmt.Sprintf("Package № %d %s. Package: %s", p.PackageID, p.Type, pkg)
 }
 
 // String implements fmt.Stringer
@@ -109,27 +111,22 @@ func (c *Package) LogValue() slog.Value {
 // ToProto converts model.Package to pb.Package
 func (c *Package) ToProto() *pb.Package {
 	// проверка опциональных полей
-	var weight *uint64
+	var weight *int64
 	if c.Weight.Valid { // Если указан вес
-		t := uint64(c.Weight.Int64)
+		t := c.Weight.Int64
 		weight = &t
 	}
 	var updated *timestamp.Timestamp // если есть updated time
 	if c.Updated.Valid {
-		updated = &timestamp.Timestamp{
-			Seconds: c.Updated.Time.Unix(),
-			Nanos:   int32(c.Updated.Time.Nanosecond()),
-		}
+		updated = timestamppb.New(c.Updated.Time)
 	}
+	created := timestamppb.New(c.Created)
 
 	return &pb.Package{
-		Id:     c.ID,
-		Title:  c.Title,
-		Weight: weight,
-		Created: &timestamp.Timestamp{
-			Seconds: c.Created.Unix(),
-			Nanos:   int32(c.Created.Nanosecond()),
-		},
+		Id:      c.ID,
+		Title:   c.Title,
+		Weight:  weight,
+		Created: created,
 		Updated: updated,
 	}
 }
@@ -141,7 +138,7 @@ func (c *Package) FromProto(pkg *pb.Package) {
 	c.Title = pkg.Title
 
 	if pkg.Weight != nil {
-		c.Weight = sql.NullInt64{Int64: int64(*pkg.Weight), Valid: true}
+		c.Weight = sql.NullInt64{Int64: *pkg.Weight, Valid: true}
 	} else {
 		c.Weight = sql.NullInt64{}
 	}

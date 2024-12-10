@@ -28,7 +28,7 @@ type retranslator struct {
 }
 
 // NewRetranslator конструктор
-func NewRetranslator(Repo repo.EventRepo, Sender sender.EventSender) Retranslator {
+func NewRetranslator(r repo.EventRepo, s sender.EventSender) Retranslator {
 
 	log := slog.With("func", "retranslator.NewRetranslator")
 
@@ -38,7 +38,7 @@ func NewRetranslator(Repo repo.EventRepo, Sender sender.EventSender) Retranslato
 	unlocks := make(chan int64)
 	removes := make(chan int64)
 	dbconsumer := consumer.NewDbConsumer(
-		Repo,
+		r,
 		events,
 		unlocks,
 		removes,
@@ -47,14 +47,14 @@ func NewRetranslator(Repo repo.EventRepo, Sender sender.EventSender) Retranslato
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(globalcfg.Database.QueryTimeout))
 	defer cancel()
 
-	err := Repo.UnlockAll(ctx) // Разблокируем сообщения. Такие могут появиться если ретранслятор был завершен без graceful.
+	err := r.UnlockAll(ctx) // Разблокируем сообщения. Такие могут появиться если ретранслятор был завершен без graceful.
 	if err != nil {
-		log.Error("error unlock all", err)
+		log.Error("error unlock all", slog.String("error", err.Error()))
 	}
 
 	kafkaproducer := producer.NewProducer(
-		Sender,
-		Repo,
+		s,
+		r,
 		events,
 		unlocks,
 		removes,

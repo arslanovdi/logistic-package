@@ -12,7 +12,7 @@
 
 [KafkaUI](localhost:9001)
 
-[Schemaregistry](localhost:8081)
+[SchemaRegistry](localhost:8081)
 
 [Grafana](localhost:3000)
 

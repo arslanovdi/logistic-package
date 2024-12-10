@@ -43,7 +43,7 @@ func NewPgxPool(ctx context.Context) (*pgxpool.Pool, error) {
 		cfg.Database.User,
 		cfg.Database.Password,
 		cfg.Database.Name,
-		cfg.Database.SslMode,
+		cfg.Database.Ssl,
 	)
 
 	// Эти параметры можно также задать в DSN
@@ -60,7 +60,7 @@ func NewPgxPool(ctx context.Context) (*pgxpool.Pool, error) {
 
 	pgxConfig.ConnConfig.Tracer = otelpgx.NewTracer() // Добавляем OpenTelemtry трассировку для PostgreSQL
 
-	dbpool, err1 := pgxpool.NewWithConfig(ctx, pgxConfig) //pgxpool.New(ctx, dsn)
+	dbpool, err1 := pgxpool.NewWithConfig(ctx, pgxConfig)
 	if err1 != nil {
 		log.Warn("Error connecting to the database", slog.String("error", err1.Error()))
 		return nil, fmt.Errorf("database.NewPgxPool: %w", err1)

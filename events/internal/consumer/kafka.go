@@ -1,6 +1,7 @@
 package consumer
 
 import (
+	"errors"
 	"github.com/arslanovdi/logistic-package/events/internal/config"
 	"github.com/arslanovdi/logistic-package/events/internal/general"
 	"github.com/arslanovdi/logistic-package/pkg/model"
@@ -49,10 +50,10 @@ func NewKafkaConsumer() (*KafkaConsumer, error) {
 		return nil, err
 	}
 
-	deserializercfg := jsonschema.NewDeserializerConfig()
-	deserializercfg.UseLatestVersion = true
+	deserializerConfig := jsonschema.NewDeserializerConfig()
+	deserializerConfig.UseLatestVersion = true
 
-	deserializer, err := jsonschema.NewDeserializer(sr, serde.ValueSerde, deserializercfg)
+	deserializer, err := jsonschema.NewDeserializer(sr, serde.ValueSerde, deserializerConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -85,9 +86,16 @@ func (k *KafkaConsumer) Run(topic string, handler func(key string, msg model.Pac
 	for !k.stop {
 		kafkaMsg, err := k.consumer.ReadMessage(readTimeout) // read message with timeout
 		if err != nil {
-			if err.(kafka.Error).IsTimeout() {
-				continue
+
+			var e kafka.Error
+			ok := errors.As(err, &e)
+
+			if ok {
+				if e.IsTimeout() {
+					continue
+				}
 			}
+
 			return err
 		}
 

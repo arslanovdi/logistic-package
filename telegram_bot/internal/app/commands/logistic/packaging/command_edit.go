@@ -1,9 +1,11 @@
 package packaging
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/arslanovdi/logistic-package/telegram_bot/internal/model"
+	"github.com/arslanovdi/logistic-package/pkg/model"
+	"github.com/arslanovdi/logistic-package/telegram_bot/internal/general"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log/slog"
 	"strings"
@@ -28,21 +30,16 @@ func (c *Commander) Edit(message *tgbotapi.Message) {
 			log.Info("wrong args", slog.Any("args", args), slog.String("error", err.Error()))
 			err = fmt.Errorf("wrong args %v", args)
 		}
-		/*if len(pkg.Title) == 0 {
-			log.Info("wrong args", slog.Any("args", args), slog.String("error", "Title is ''"))
-			err = fmt.Errorf("wrong args %v", args)
-		}*/
 	case 2:
-		pkg.Weight = new(uint64)
-		_, err = fmt.Sscanf(args, "%d %s %d", &pkg.ID, &pkg.Title, pkg.Weight)
+		pkg.Weight = sql.NullInt64{
+			Int64: 0,
+			Valid: true,
+		}
+		_, err = fmt.Sscanf(args, "%d %s %d", &pkg.ID, &pkg.Title, pkg.Weight.Int64)
 		if err != nil {
 			log.Info("wrong args", slog.Any("args", args), slog.String("error", err.Error()))
 			err = fmt.Errorf("wrong args %v", args)
 		}
-		/*if len(pkg.Title) == 0 || *pkg.Weight == 0 {
-			log.Info("wrong args", slog.Any("args", args), slog.String("error", "Title is ''"))
-			err = fmt.Errorf("wrong args %v", args)
-		}*/
 	default:
 		log.Info("wrong args count", slog.Any("args", args))
 		err = fmt.Errorf("wrong args %v", args)
@@ -53,13 +50,12 @@ func (c *Commander) Edit(message *tgbotapi.Message) {
 		return
 	}
 
-	pkg.Updated = new(time.Time)
-	*pkg.Updated = time.Now()
+	pkg.Updated = sql.NullTime{Time: time.Now(), Valid: true}
 
-	err = c.packageService.Update(pkg)
+	err = c.packageService.Update(&pkg)
 	if err != nil {
 		log.Error("fail to edit package", slog.Uint64("id", pkg.ID), slog.String("error", err.Error()))
-		if errors.Is(err, model.ErrNotFound) {
+		if errors.Is(err, general.ErrNotFound) {
 			c.errorResponseCommand(message, "Package not found")
 			return
 		}

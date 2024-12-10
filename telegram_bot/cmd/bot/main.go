@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	starttimeout = 5 * time.Second
+	startTimeout = 5 * time.Second
 )
 
 func main() {
@@ -71,7 +71,7 @@ func main() {
 		slog.String("instance", cfg.Project.Instance),
 	)
 
-	ctxTrace, cancelTrace := context.WithTimeout(context.Background(), starttimeout)
+	ctxTrace, cancelTrace := context.WithTimeout(context.Background(), startTimeout)
 	defer cancelTrace()
 
 	trace, err := tracer.NewTracer(
@@ -83,25 +83,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	isReady := &atomic.Value{}
+	isReady := &atomic.Bool{}
 	isReady.Store(false)
 
 	go func() { // TODO отсечка статус сервера
-		time.Sleep(starttimeout)
+		time.Sleep(startTimeout)
 		isReady.Store(true)
 		log.Info("The service is ready to accept requests")
 	}()
 
 	statusServer := server.NewStatusServer(
 		isReady,
-		server.StatusConfig{
+		&server.StatusConfig{
 			Host:          cfg.Status.Host,
 			Port:          cfg.Status.Port,
 			LivenessPath:  cfg.Status.LivenessPath,
 			ReadinessPath: cfg.Status.ReadinessPath,
 			VersionPath:   cfg.Status.VersionPath,
 		},
-		server.ProjectInfo{
+		&server.ProjectInfo{
 			Name:        cfg.Project.Name,
 			Debug:       cfg.Project.Debug,
 			Environment: cfg.Project.Environment,
@@ -112,12 +112,12 @@ func main() {
 	)
 	statusServer.Start()
 
-	mcfg := server.MetricsConfig{
+	metricsConfig := &server.MetricsConfig{
 		Host: cfg.Metrics.Host,
 		Port: cfg.Metrics.Port,
 		Path: cfg.Metrics.Path,
 	}
-	metricsServer := server.NewMetricsServer(mcfg)
+	metricsServer := server.NewMetricsServer(metricsConfig)
 	metricsServer.Start()
 
 	grpcClient := grpc.NewGrpcClient()
@@ -140,7 +140,7 @@ func main() {
 
 	updates := bot.GetUpdatesChan(u) // получаем канал обновлений телеграм бота
 
-	routerHandler := routerPkg.New(bot, packageService) // Создаем обработчик телегрм бота
+	routerHandler := routerPkg.New(bot, packageService) // Создаем обработчик телеграм бота
 
 	go fake.Emulate(2000, packageService) // запускаем эмуляцию пользователей телеграм бота
 
@@ -150,12 +150,11 @@ func main() {
 	for {
 		select {
 		case update := <-updates:
-			routerHandler.HandleUpdate(update)
+			routerHandler.HandleUpdate(&update)
 		case <-stop:
 			log.Info("Graceful shutdown")
 
 			ctxShutdown, cancelShutdown := context.WithTimeout(context.Background(), time.Second*time.Duration(cfg.Project.ShutdownTimeout))
-			defer cancelShutdown()
 			go func() {
 				<-ctxShutdown.Done()
 				log.Warn("Application shutdown time exceeded")
@@ -173,6 +172,7 @@ func main() {
 
 			statusServer.Stop(ctxShutdown)
 
+			cancelShutdown()
 			log.Info("Application stopped")
 			return
 		}
