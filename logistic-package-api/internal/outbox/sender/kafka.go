@@ -13,6 +13,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/jsonschema"
+	"go.opentelemetry.io/otel/trace"
 	"log/slog"
 	"os"
 	"strconv"
@@ -46,6 +47,10 @@ func (k *kafkaSender) Send(ctx context.Context, pkg *model.PackageEvent, topic s
 
 	log := slog.With("func", "kafkaSender.Send")
 
+	if span := trace.SpanContextFromContext(ctx); span.IsSampled() { // вытягиваем span из контекста и пробрасываем в лог
+		log = log.With("trace_id", span.TraceID().String())
+	}
+
 	k.senders.Add(1)
 	defer k.senders.Done()
 
@@ -62,7 +67,7 @@ func (k *kafkaSender) Send(ctx context.Context, pkg *model.PackageEvent, topic s
 			Topic:     &topic,
 			Partition: kafka.PartitionAny,
 		},
-		Key:   []byte(fmt.Sprintf("%d", pkg.PackageID)), // TODO ID ?
+		Key:   []byte(fmt.Sprintf("%d", pkg.PackageID)),
 		Value: payload,
 	}
 

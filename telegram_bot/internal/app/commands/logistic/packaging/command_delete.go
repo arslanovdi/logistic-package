@@ -6,6 +6,7 @@ import (
 	"github.com/arslanovdi/logistic-package/telegram_bot/internal/general"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log/slog"
+	"strings"
 )
 
 // Delete обработка команды /delete бота
@@ -14,6 +15,12 @@ func (c *Commander) Delete(message *tgbotapi.Message) {
 	log := slog.With("func", "Commander.Delete")
 
 	args := message.CommandArguments()
+
+	if strings.Count(args, " ") > 0 {
+		c.errorResponseCommand(message, fmt.Sprintf("too many args %v", args))
+		log.Info("wrong args", slog.Any("args", args), slog.String("error", "too many args"))
+		return
+	}
 
 	id := uint64(0)
 	_, err := fmt.Sscanf(args, "%d", &id)

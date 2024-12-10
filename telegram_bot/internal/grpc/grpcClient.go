@@ -3,12 +3,11 @@ package grpc
 
 import (
 	"github.com/arslanovdi/logistic-package/telegram_bot/internal/config"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log/slog"
 	"os"
-
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 )
 
 import pb "github.com/arslanovdi/logistic-package/pkg/logistic-package-api"

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/arslanovdi/logistic-package/telegram_bot/internal/general"
+	"strings"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log/slog"
 )
@@ -14,6 +16,12 @@ func (c *Commander) Get(message *tgbotapi.Message) {
 	log := slog.With("func", "Commander.Get")
 
 	args := message.CommandArguments()
+
+	if strings.Count(args, " ") > 0 {
+		c.errorResponseCommand(message, fmt.Sprintf("too many args %v", args))
+		log.Info("wrong args", slog.Any("args", args), slog.String("error", "too many args"))
+		return
+	}
 
 	id := uint64(0)
 	_, err := fmt.Sscanf(args, "%d", &id)

@@ -438,11 +438,11 @@ linters-settings:
     exclude-functions:
       - (strings.Builder).WriteString
       - (*strings.Builder).WriteString
-      - (pgxpool.Pool).Query  # ошибку обрабатываю в pgx.Rows
       - (*pgxpool.Pool).Query  # ошибку обрабатываю в pgx.Rows
       - io/ioutil.ReadFile
       - io.Copy(*bytes.Buffer)
       - io.Copy(os.Stdout)
+#      - (pgxpool.Pool).Query  # ошибку обрабатываю в pgx.Rows
 #      - (kafka.Error).IsTimeout
 
   errchkjson:
@@ -3731,11 +3731,11 @@ issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
     # Exclude some linters from running on tests files.
-#    - path: _test\.go
-#      linters:
+    - path: _test\.go
+      linters:
 #        - gocyclo
 #        - errcheck
-#        - dupl
+        - dupl
 #        - gosec
 
     # Run some linter only for test files by excluding its issues for everything else.

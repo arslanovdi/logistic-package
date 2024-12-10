@@ -35,11 +35,13 @@ func (c *Commander) Edit(message *tgbotapi.Message) {
 			Int64: 0,
 			Valid: true,
 		}
-		_, err = fmt.Sscanf(args, "%d %s %d", &pkg.ID, &pkg.Title, pkg.Weight.Int64)
+		weight := uint(0)
+		_, err = fmt.Sscanf(args, "%d %s %d", &pkg.ID, &pkg.Title, &weight)
 		if err != nil {
 			log.Info("wrong args", slog.Any("args", args), slog.String("error", err.Error()))
 			err = fmt.Errorf("wrong args %v", args)
 		}
+		pkg.Weight.Int64 = int64(weight)
 	default:
 		log.Info("wrong args count", slog.Any("args", args))
 		err = fmt.Errorf("wrong args %v", args)

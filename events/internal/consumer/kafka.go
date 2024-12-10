@@ -1,6 +1,7 @@
 package consumer
 
 import (
+	"context"
 	"errors"
 	"github.com/arslanovdi/logistic-package/events/internal/config"
 	"github.com/arslanovdi/logistic-package/events/internal/general"
@@ -71,7 +72,7 @@ func NewKafkaConsumer() (*KafkaConsumer, error) {
 	}, nil
 }
 
-func (k *KafkaConsumer) Run(topic string, handler func(key string, msg model.PackageEvent, offset int64)) error {
+func (k *KafkaConsumer) Run(topic string, handler func(ctx context.Context, key string, msg model.PackageEvent, offset int64)) error {
 	if k.stop {
 		return general.ErrConsumerClosed
 	}
@@ -112,7 +113,9 @@ func (k *KafkaConsumer) Run(topic string, handler func(key string, msg model.Pac
 
 		k.tracer.OnProcess(kafkaMsg, k.group)
 
-		handler(string(kafkaMsg.Key), event, int64(kafkaMsg.TopicPartition.Offset))
+		ctxWithTrace := oteltracer.Context(kafkaMsg)
+
+		handler(ctxWithTrace, string(kafkaMsg.Key), event, int64(kafkaMsg.TopicPartition.Offset))
 
 		_, err2 := k.consumer.CommitMessage(kafkaMsg)
 		if err2 != nil {

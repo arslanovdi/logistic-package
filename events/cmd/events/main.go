@@ -26,7 +26,7 @@ const (
 )
 
 type PackageConsumer interface {
-	Run(topic string, handler func(key string, msg model.PackageEvent, offset int64)) error
+	Run(topic string, handler func(ctx context.Context, key string, msg model.PackageEvent, offset int64)) error
 	Close()
 }
 

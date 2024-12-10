@@ -77,7 +77,8 @@ func (p *Producer) Start(topic string) {
 							ctx = trace.ContextWithRemoteSpanContext(
 								context.Background(),
 								trace.NewSpanContext(trace.SpanContextConfig{
-									TraceID: traceid,
+									TraceID:    traceid,
+									TraceFlags: trace.FlagsSampled,
 								}),
 							)
 						}

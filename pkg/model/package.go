@@ -67,6 +67,10 @@ func (e EventType) String() string {
 
 func (p *PackageEvent) String() string {
 
+	if p.Type == Removed {
+		return fmt.Sprintf("Package № %d %s", p.PackageID, p.Type)
+	}
+
 	log := slog.With("func", "model.PackageEvent.String")
 
 	pkg := &Package{}
