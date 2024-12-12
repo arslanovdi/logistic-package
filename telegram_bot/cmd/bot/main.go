@@ -6,25 +6,29 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/arslanovdi/logistic-package/pkg/logger"
-	"github.com/arslanovdi/logistic-package/pkg/server"
-	"github.com/arslanovdi/logistic-package/pkg/tracer"
-	routerPkg "github.com/arslanovdi/logistic-package/telegram_bot/internal/app/router"
-	"github.com/arslanovdi/logistic-package/telegram_bot/internal/config"
-	"github.com/arslanovdi/logistic-package/telegram_bot/internal/fake"
-	"github.com/arslanovdi/logistic-package/telegram_bot/internal/grpc"
-	"github.com/arslanovdi/logistic-package/telegram_bot/internal/service"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log/slog"
 	"os"
 	"os/signal"
 	"sync/atomic"
 	"syscall"
 	"time"
+
+	"github.com/arslanovdi/logistic-package/telegram_bot/internal/api/grpc"
+
+	"github.com/arslanovdi/logistic-package/pkg/logger"
+	"github.com/arslanovdi/logistic-package/pkg/server"
+	"github.com/arslanovdi/logistic-package/pkg/tracer"
+	routerpkg "github.com/arslanovdi/logistic-package/telegram_bot/internal/bot/router"
+	"github.com/arslanovdi/logistic-package/telegram_bot/internal/config"
+	"github.com/arslanovdi/logistic-package/telegram_bot/internal/fake"
+	"github.com/arslanovdi/logistic-package/telegram_bot/internal/service"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 const (
 	startTimeout = 5 * time.Second
+
+	fakeDuration = 2000 // ms
 )
 
 func main() {
@@ -32,19 +36,20 @@ func main() {
 
 	version := flag.String("version", "dev", "Defines the version of the service")
 	commitHash := flag.String("commitHash", "-", "Defines the commit hash of the service")
+	// дефолтный конфиг файл для локального запуска
 	configFile := flag.String("config", "telegram_bot/config_local.yml", "Defines the config file of the service")
 	flag.Parse()
 
 	log := slog.With("func", "main")
 
-	err1 := config.ReadConfigYML(*configFile)
+	err1 := config.ReadConfigYML(*configFile) // чтение конфигурации, в докере подставляется свой конфиг
 	if err1 != nil {
 		log.Warn("Failed to read config", slog.String("error", err1.Error()))
 		os.Exit(1)
 	}
 	cfg := config.GetConfigInstance()
 
-	cfg.Project.Version = *version
+	cfg.Project.Version = *version // загружаем флагами, полученные из командной строки
 	cfg.Project.CommitHash = *commitHash
 
 	if cfg.Project.Debug {
@@ -53,8 +58,11 @@ func main() {
 		logger.SetLogLevel(slog.LevelInfo)
 	}
 
-	startCtx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(cfg.Project.StartupTimeout)) // контекст запуска приложения
+	startCtx, cancel := context.WithTimeout(
+		context.Background(),
+		time.Second*time.Duration(cfg.Project.StartupTimeout)) // контекст запуска приложения
 	defer cancel()
+
 	go func() {
 		<-startCtx.Done()
 		if errors.Is(startCtx.Err(), context.DeadlineExceeded) { // приложение зависло при запуске
@@ -71,7 +79,7 @@ func main() {
 		slog.String("instance", cfg.Project.Instance),
 	)
 
-	ctxTrace, cancelTrace := context.WithTimeout(context.Background(), startTimeout)
+	ctxTrace, cancelTrace := context.WithTimeout(context.Background(), startTimeout) // контекст запуска grpc экспортера в jaeger
 	defer cancelTrace()
 
 	trace, err := tracer.NewTracer(
@@ -83,7 +91,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	isReady := &atomic.Bool{}
+	isReady := &atomic.Bool{} // состояние приложения
 	isReady.Store(false)
 
 	go func() { // TODO отсечка статус сервера
@@ -112,15 +120,15 @@ func main() {
 	)
 	statusServer.Start()
 
-	metricsConfig := &server.MetricsConfig{
-		Host: cfg.Metrics.Host,
-		Port: cfg.Metrics.Port,
-		Path: cfg.Metrics.Path,
-	}
-	metricsServer := server.NewMetricsServer(metricsConfig)
+	metricsServer := server.NewMetricsServer(
+		&server.MetricsConfig{
+			Host: cfg.Metrics.Host,
+			Port: cfg.Metrics.Port,
+			Path: cfg.Metrics.Path,
+		})
 	metricsServer.Start()
 
-	grpcClient := grpc.NewGrpcClient()
+	grpcClient := grpc.MustNewGrpcClient()
 	packageService := service.NewPackageService(grpcClient)
 
 	bot, err3 := tgbotapi.NewBotAPI(cfg.Telegram.Token)
@@ -135,14 +143,17 @@ func main() {
 	// bot.Debug = true
 
 	u := tgbotapi.UpdateConfig{
-		Timeout: 60,
+		Timeout: cfg.Telegram.Timeout,
 	}
 
 	updates := bot.GetUpdatesChan(u) // получаем канал обновлений телеграм бота
 
-	routerHandler := routerPkg.New(bot, packageService) // Создаем обработчик телеграм бота
+	routerHandler := routerpkg.New(bot, packageService) // Создаем обработчик телеграм бота
 
-	go fake.Emulate(2000, packageService) // запускаем эмуляцию пользователей телеграм бота
+	if cfg.Telegram.Faker {
+		f := fake.NewFaker(fakeDuration, packageService)
+		f.Emulate() // запускаем эмуляцию пользователей телеграм бота
+	}
 
 	cancel() // отменяем контекст запуска приложения
 	stop := make(chan os.Signal, 1)
@@ -154,7 +165,9 @@ func main() {
 		case <-stop:
 			log.Info("Graceful shutdown")
 
-			ctxShutdown, cancelShutdown := context.WithTimeout(context.Background(), time.Second*time.Duration(cfg.Project.ShutdownTimeout))
+			ctxShutdown, cancelShutdown := context.WithTimeout(
+				context.Background(),
+				time.Second*time.Duration(cfg.Project.ShutdownTimeout)) // контекст останова приложения
 			go func() {
 				<-ctxShutdown.Done()
 				log.Warn("Application shutdown time exceeded")
@@ -173,7 +186,8 @@ func main() {
 			statusServer.Stop(ctxShutdown)
 
 			cancelShutdown()
-			log.Info("Application stopped")
+
+			log.Info("Application stopped correctly")
 			return
 		}
 	}

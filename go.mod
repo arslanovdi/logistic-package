@@ -17,6 +17,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.24.0
 	github.com/huandu/go-sqlbuilder v1.33.1
 	github.com/jackc/pgx/v5 v5.7.1
+	github.com/magiconair/properties v1.8.7
 	github.com/pressly/goose/v3 v3.23.0
 	github.com/prometheus/client_golang v1.20.5
 	github.com/stretchr/testify v1.10.0

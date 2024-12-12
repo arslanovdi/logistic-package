@@ -5,6 +5,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log/slog"
+	"os"
+	"os/signal"
+	"sync/atomic"
+	"syscall"
+	"time"
+
 	"github.com/arslanovdi/logistic-package/events/internal/config"
 	"github.com/arslanovdi/logistic-package/events/internal/consumer"
 	"github.com/arslanovdi/logistic-package/events/internal/general"
@@ -13,12 +20,6 @@ import (
 	"github.com/arslanovdi/logistic-package/pkg/model"
 	"github.com/arslanovdi/logistic-package/pkg/server"
 	"github.com/arslanovdi/logistic-package/pkg/tracer"
-	"log/slog"
-	"os"
-	"os/signal"
-	"sync/atomic"
-	"syscall"
-	"time"
 )
 
 const (
@@ -26,7 +27,9 @@ const (
 )
 
 type PackageConsumer interface {
+	// Run read and process messages from kafka
 	Run(topic string, handler func(ctx context.Context, key string, msg model.PackageEvent, offset int64)) error
+	// Close consumer
 	Close()
 }
 
@@ -35,18 +38,20 @@ func main() {
 
 	version := flag.String("version", "dev", "Defines the version of the service")
 	commitHash := flag.String("commitHash", "-", "Defines the commit hash of the service")
+	// дефолтный конфиг файл для локального запуска
 	configFile := flag.String("config", "events/config_local.yml", "Defines the config file of the service")
 	flag.Parse()
 
 	log := slog.With("func", "main")
 
-	if err := config.ReadConfigYML(*configFile); err != nil {
+	if err := config.ReadConfigYML(*configFile); err != nil { // чтение конфигурации, в докере подставляется свой конфиг
 		log.Warn("Failed init configuration", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
+
 	cfg := config.GetConfigInstance()
 
-	cfg.Project.Version = *version
+	cfg.Project.Version = *version // загружаем флагами, полученные из командной строки
 	cfg.Project.CommitHash = *commitHash
 
 	if cfg.Project.Debug {
@@ -55,8 +60,11 @@ func main() {
 		logger.SetLogLevel(slog.LevelInfo)
 	}
 
-	startCtx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(cfg.Project.StartupTimeout)) // контекст запуска приложения
+	startCtx, cancel := context.WithTimeout(
+		context.Background(),
+		time.Second*time.Duration(cfg.Project.StartupTimeout)) // контекст запуска приложения
 	defer cancel()
+
 	go func() {
 		<-startCtx.Done()
 		if errors.Is(startCtx.Err(), context.DeadlineExceeded) { // приложение зависло при запуске
@@ -73,7 +81,7 @@ func main() {
 		slog.String("instance", cfg.Project.Instance),
 	)
 
-	ctxTrace, cancelTrace := context.WithTimeout(context.Background(), startTimeout)
+	ctxTrace, cancelTrace := context.WithTimeout(context.Background(), startTimeout) // контекст запуска grpc экспортера в jaeger
 	defer cancelTrace()
 
 	trace, err := tracer.NewTracer(
@@ -85,7 +93,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	isReady := &atomic.Bool{}
+	isReady := &atomic.Bool{} // состояние приложения
 	isReady.Store(false)
 
 	statusServer := server.NewStatusServer(
@@ -108,12 +116,12 @@ func main() {
 	)
 	statusServer.Start()
 
-	metricsConfig := &server.MetricsConfig{
-		Host: cfg.Metrics.Host,
-		Port: cfg.Metrics.Port,
-		Path: cfg.Metrics.Path,
-	}
-	metricsServer := server.NewMetricsServer(metricsConfig)
+	metricsServer := server.NewMetricsServer(
+		&server.MetricsConfig{
+			Host: cfg.Metrics.Host,
+			Port: cfg.Metrics.Port,
+			Path: cfg.Metrics.Path,
+		})
 	metricsServer.Start()
 
 	var kafka PackageConsumer
@@ -124,17 +132,17 @@ func main() {
 	}
 
 	go func() {
-		for {
+		for { // retry loop
+			log.Info("Running kafka consumer")
 			err = kafka.Run(cfg.Kafka.Topic, process.PrintPackageEvent)
-			if errors.Is(err, general.ErrConsumerClosed) {
+			if errors.Is(err, general.ErrConsumerClosed) { // exit on consumer.Close
 				break
 			}
-			if err != nil {
+			if err != nil { // остальные ошибки пишем в лог
 				log.Error("kafka consumer error", slog.String("error", err.Error()))
 			}
-			time.Sleep(startTimeout)
+			time.Sleep(startTimeout) // retry with pause (default 5 seconds)
 		}
-
 	}()
 
 	isReady.Store(true)
@@ -146,7 +154,9 @@ func main() {
 	<-stop
 	log.Info("Graceful shutdown")
 
-	ctxShutdown, cancelShutdown := context.WithTimeout(context.Background(), time.Second*time.Duration(cfg.Project.ShutdownTimeout))
+	ctxShutdown, cancelShutdown := context.WithTimeout(
+		context.Background(),
+		time.Second*time.Duration(cfg.Project.ShutdownTimeout)) // контекст останова приложения
 	defer cancelShutdown()
 	go func() {
 		<-ctxShutdown.Done()
@@ -166,5 +176,5 @@ func main() {
 
 	metricsServer.Stop(ctxShutdown)
 
-	log.Info("Application stopped")
+	log.Info("Application stopped correctly")
 }

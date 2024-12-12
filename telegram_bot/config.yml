@@ -16,6 +16,8 @@ jaeger:
   port: ":4317" # grpc 4317; http 6831
 
 telegram:
+  faker: true
+  timeout: 60 # seconds
   token: 7012140868:AAHAkiK606qFalhnX7Cm3d8aDRTIw5m3NWw
 
 metrics:

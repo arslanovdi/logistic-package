@@ -3,40 +3,41 @@ package consumer
 
 import (
 	"context"
+	"log/slog"
+	"os"
+	"sync"
+	"time"
+
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/config"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/metrics"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/outbox/repo"
 	"github.com/arslanovdi/logistic-package/pkg/model"
-	"log/slog"
-	"sync"
-	"time"
 )
 
 // Consumer читает из базы данных события в n потоков и отправляет их в канал
 type Consumer struct {
-	repo         repo.EventRepo              // интерфейс работы с БД
-	batchSize    int                         // кол-во записей получаемых из БД за один запрос
-	stop         chan struct{}               // канал для остановки
-	events       chan<- []model.PackageEvent // канал для передачи событий
-	eventsCount  int                         // кол-во обрабатываемых событий, конкурентный доступ на чтение! Т.к. сначала происходит запись и только потом чтение в потоках, race condition быть не должно.
-	unlocks      chan int64                  // канал передачи PackageEventID для снятия блокировки
-	removes      chan int64                  // канал передачи PackageEventID для удаления
-	unlockEvents []int64                     // слайс с PackageEventID, для удаления из БД
-	removeEvents []int64                     // слайс с PackageEventID, для удаления из БД
-	tick         time.Duration               // интервал между запросами в БД
-	queryTimeout time.Duration               // таймаут операций с БД
-	wg           *sync.WaitGroup
-	inwork       bool
+	repo           repo.EventRepo              // Интерфейс работы с БД
+	batchSize      int                         // Кол-во записей получаемых из БД за один запрос
+	stop           chan struct{}               // Канал для остановки
+	events         chan<- []model.PackageEvent // Канал для передачи событий
+	eventsCount    int                         // Кол-во обрабатываемых событий, race condition быть не должно.
+	unlocks        chan int64                  // Канал передачи PackageEventID для снятия блокировки
+	removes        chan int64                  // Канал передачи PackageEventID для удаления
+	unlockEvents   []int64                     // Слайс с PackageEventID, для удаления из БД
+	removeEvents   []int64                     // Слайс с PackageEventID, для удаления из БД
+	tick           time.Duration               // Интервал между запросами в БД
+	queryTimeout   time.Duration               // Таймаут операций с БД
+	inWork         bool                        // Флаг обработки батча
+	processingTime time.Time                   // Время начала обработки батча
+	wg             *sync.WaitGroup
 }
 
 // NewDbConsumer конструктор
 func NewDbConsumer(
 	r repo.EventRepo,
 	events chan<- []model.PackageEvent,
-	unlocks chan int64,
-	removes chan int64,
+	unlocks, removes chan int64,
 ) *Consumer {
-
 	log := slog.With("func", "consumer.NewDbConsumer")
 
 	cfg := config.GetConfigInstance()
@@ -59,7 +60,7 @@ func NewDbConsumer(
 		unlocks:      unlocks,
 		removes:      removes,
 		queryTimeout: time.Second * time.Duration(cfg.Database.QueryTimeout),
-		inwork:       false,
+		inWork:       false,
 	}
 
 	// собирает батч событий для удаления из БД
@@ -67,8 +68,9 @@ func NewDbConsumer(
 		for event := range c.removes { // Получаем PackageEventID
 			c.removeEvents = append(c.removeEvents, event)
 
-			if c.eventsCount == len(c.removeEvents)+len(c.unlockEvents) { // когда кол-во отправленных в кафку событий станет равно кол-ву обработанных событий. Это произойдет только в одной из горутин.
-				c.batchprocessing()
+			// Если кол-во отправленных в кафку событий равно кол-ву обработанных событий. Это произойдет только в одной из горутин.
+			if c.eventsCount == len(c.removeEvents)+len(c.unlockEvents) {
+				c.batchProcessing()
 			}
 		}
 	}()
@@ -78,8 +80,9 @@ func NewDbConsumer(
 		for event := range c.unlocks { // Получаем PackageEventID
 			c.unlockEvents = append(c.unlockEvents, event)
 
-			if c.eventsCount == len(c.removeEvents)+len(c.unlockEvents) { // когда кол-во отправленных в кафку событий станет равно кол-ву обработанных событий. Это произойдет только в одной из горутин.
-				c.batchprocessing()
+			// Если кол-во отправленных в кафку событий равно кол-ву обработанных событий. Это произойдет только в одной из горутин.
+			if c.eventsCount == len(c.removeEvents)+len(c.unlockEvents) {
+				c.batchProcessing()
 			}
 		}
 	}()
@@ -102,28 +105,29 @@ func (c *Consumer) Start() {
 		for {
 			select {
 			case <-ticker.C:
-				if c.inwork {
+				if c.inWork {
 					continue
 				}
 
 				ctx, cancel := context.WithTimeout(context.Background(), c.queryTimeout)
 
-				events, err := c.repo.Lock(ctx, c.batchSize) // берем события из базы, отсортированные по .PackageID
+				events, err := c.repo.Lock(ctx, c.batchSize) // берем события из базы, отсортированные по PackageID
 
 				cancel()
 
 				if err != nil {
 					log.Error("Error getting events from db", slog.String("error", err.Error()))
-					c.inwork = false
+					c.inWork = false
 					continue
 				}
 				if len(events) == 0 {
-					c.inwork = false
+					c.inWork = false
 					continue
 				}
 
-				c.wg.Add(1) // whait for batchprocessing
-				c.inwork = true
+				c.wg.Add(1) // wait for batchProcessing
+				c.inWork = true
+				c.processingTime = time.Now()
 
 				c.eventsCount = len(events)
 
@@ -131,18 +135,18 @@ func (c *Consumer) Start() {
 
 				metrics.RetranslatorEvents.Add(float64(len(events))) // метрика, кол-во обрабатываемых событий, прибавляем к счетчику
 
-				packageid := events[0].PackageID
+				packageID := events[0].PackageID
 				index := 0
 				for i := 0; i < len(events); i++ {
-					if packageid == events[i].PackageID {
+					if packageID == events[i].PackageID {
 						continue
 					}
 					c.events <- events[index:i] // передает события в канал с разбивкой по PackageID
 
-					log.Debug("send event to channel", slog.Any("PackageID", packageid), slog.Int("event count", len(events[index:i])))
+					log.Debug("send event to channel", slog.Any("PackageID", packageID), slog.Int("event count", len(events[index:i])))
 
 					index = i
-					packageid = events[i].PackageID
+					packageID = events[i].PackageID
 				}
 				c.events <- events[index:] // события последнего packageID
 
@@ -163,12 +167,12 @@ func (c *Consumer) Stop() {
 	log.Info("db consumer stopped")
 }
 
-// batchprocessing удаление из БД отправленных в кафку событий, батчем
-// разблокировка в БД не отправленных событий, батчем
-func (c *Consumer) batchprocessing() {
+// batchProcessing удаление из БД отправленных в кафку событий
+// разблокировка в БД не отправленных событий
+func (c *Consumer) batchProcessing() {
 	defer c.wg.Done()
 
-	log := slog.With("func", "consumer.batchprocessing")
+	log := slog.With("func", "consumer.batchProcessing")
 
 	ctx, cancel := context.WithTimeout(context.Background(), c.queryTimeout)
 	defer cancel()
@@ -176,12 +180,12 @@ func (c *Consumer) batchprocessing() {
 	if len(c.removeEvents) > 0 {
 		// Обработка батча завершена, удаляем события из БД
 		err := c.repo.Remove(ctx, c.removeEvents)
-		if err != nil {
+		if err != nil { // TODO Будут повторные отправки, процессинг должен быть идемпотентным. Либо ретраить до упора.
 			log.Error("Ошибка при удалении события из БД", slog.String("error", err.Error()))
 		}
 		log.Debug("Remove event from package_events", slog.Int("events count", len(c.removeEvents)))
 		c.removeEvents = c.removeEvents[:0]
-		c.inwork = false
+		c.inWork = false
 	}
 
 	if len(c.unlockEvents) > 0 {
@@ -189,10 +193,12 @@ func (c *Consumer) batchprocessing() {
 		err := c.repo.Unlock(ctx, c.unlockEvents)
 		if err != nil {
 			log.Error("Ошибка при снятии блокировки с события в БД", slog.String("error", err.Error()))
+			os.Exit(1) // TODO нужно ретраить, либо перезапускать сервис. Иначе может нарушиться порядок событий
 		}
 		log.Debug("Unlock unset events", slog.Int("events count", len(c.unlockEvents)))
 		c.unlockEvents = c.unlockEvents[:0]
-		c.inwork = false
+		c.inWork = false
 	}
 
+	metrics.ProcessingTime.Set(time.Since(c.processingTime).Seconds())
 }

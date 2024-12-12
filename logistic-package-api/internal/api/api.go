@@ -4,14 +4,16 @@ package api
 import (
 	"context"
 	"errors"
+	"log/slog"
+
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/general"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/service"
 	pb "github.com/arslanovdi/logistic-package/pkg/logistic-package-api"
 	"github.com/arslanovdi/logistic-package/pkg/model"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
+
 	"google.golang.org/grpc/status"
-	"log/slog"
 )
 
 // PackageAPI имплементация grpc сервера
@@ -22,7 +24,6 @@ type PackageAPI struct {
 
 // CreateV1 grpc ручка создания пакета
 func (p *PackageAPI) CreateV1(ctx context.Context, req *pb.CreateRequestV1) (*pb.CreateResponseV1, error) {
-
 	log := slog.With("func", "api.CreateV1")
 
 	if span := trace.SpanContextFromContext(ctx); span.IsSampled() { // вытягиваем span из контекста и пробрасываем в лог
@@ -51,7 +52,6 @@ func (p *PackageAPI) CreateV1(ctx context.Context, req *pb.CreateRequestV1) (*pb
 
 // DeleteV1 grpc ручка удаления пакета
 func (p *PackageAPI) DeleteV1(ctx context.Context, req *pb.DeleteV1Request) (*pb.DeleteV1Response, error) {
-
 	log := slog.With("func", "api.DeleteV1")
 
 	if span := trace.SpanContextFromContext(ctx); span.IsSampled() { // вытягиваем span из контекста и пробрасываем в лог
@@ -76,12 +76,10 @@ func (p *PackageAPI) DeleteV1(ctx context.Context, req *pb.DeleteV1Request) (*pb
 	log.Debug("DeleteV1 - deleted", slog.Uint64("id", req.PackageId))
 	return &pb.DeleteV1Response{},
 		status.New(codes.OK, "").Err()
-
 }
 
 // GetV1 grpc ручка получения пакета
 func (p *PackageAPI) GetV1(ctx context.Context, req *pb.GetV1Request) (*pb.GetV1Response, error) {
-
 	log := slog.With("func", "api.GetV1")
 
 	if span := trace.SpanContextFromContext(ctx); span.IsSampled() { // вытягиваем span из контекста и пробрасываем в лог
@@ -111,7 +109,6 @@ func (p *PackageAPI) GetV1(ctx context.Context, req *pb.GetV1Request) (*pb.GetV1
 
 // ListV1 grpc ручка получения списка пакетов
 func (p *PackageAPI) ListV1(ctx context.Context, req *pb.ListV1Request) (*pb.ListV1Response, error) {
-
 	log := slog.With("func", "api.ListV1")
 
 	if span := trace.SpanContextFromContext(ctx); span.IsSampled() { // вытягиваем span из контекста и пробрасываем в лог
@@ -149,7 +146,6 @@ func (p *PackageAPI) ListV1(ctx context.Context, req *pb.ListV1Request) (*pb.Lis
 
 // UpdateV1 grpc ручка изменения пакета
 func (p *PackageAPI) UpdateV1(ctx context.Context, req *pb.UpdateV1Request) (*pb.UpdateV1Response, error) {
-
 	log := slog.With("func", "api.UpdateV1")
 
 	if span := trace.SpanContextFromContext(ctx); span.IsSampled() { // вытягиваем span из контекста и пробрасываем в лог

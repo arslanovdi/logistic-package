@@ -4,6 +4,11 @@ package server
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"net"
+	"os"
+	"time"
+
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/metrics"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/service"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
@@ -14,16 +19,12 @@ import (
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
-	"log/slog"
-	"net"
-	"os"
-	"time"
 
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/api"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/config"
 	pb "github.com/arslanovdi/logistic-package/pkg/logistic-package-api"
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
-	grpcPrometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	grpcprometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"google.golang.org/grpc"
 )
 
@@ -34,8 +35,7 @@ type GrpcServer struct {
 }
 
 // grpcMiddleware Перехватчик унарных методов, считаем метрики
-func grpcMiddleware(ctx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-
+func grpcMiddleware(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 	d := time.Now()
 
 	m, err := handler(ctx, req)
@@ -53,12 +53,11 @@ func grpcMiddleware(ctx context.Context, req interface{}, _ *grpc.UnaryServerInf
 
 // NewGrpcServer returns gRPC server
 func NewGrpcServer(packageService *service.PackageService) *GrpcServer {
-
 	cfg := config.GetConfigInstance()
 
 	s := &GrpcServer{}
 
-	// дефолтные grpc метрики в прометеус
+	// grpc metrics to prometheus
 	srvMetrics := grpcprom.NewServerMetrics(
 		grpcprom.WithServerHandlingTimeHistogram(
 			grpcprom.WithHistogramBuckets([]float64{0.001, 0.01, 0.1, 0.3, 0.6, 1, 3, 6, 9, 20, 30, 60, 90, 120})))
@@ -88,11 +87,11 @@ func NewGrpcServer(packageService *service.PackageService) *GrpcServer {
 
 	pb.RegisterLogisticPackageApiServiceServer(s.server, api.NewPackageAPI(packageService)) // регистрируем имплементацию интерфейса в gRPC-сервере
 
-	grpcPrometheus.EnableHandlingTimeHistogram()
-	grpcPrometheus.Register(s.server)
+	grpcprometheus.EnableHandlingTimeHistogram()
+	grpcprometheus.Register(s.server)
 
 	if cfg.Project.Debug {
-		reflection.Register(s.server) // в дебаге регестрируем отражение методов gRPC-сервера: предоставляет сведения о публично доступных методах
+		reflection.Register(s.server) // регистрирует отражение методов gRPC-сервера: предоставляет сведения о публично доступных методах
 	}
 
 	return s
@@ -100,7 +99,6 @@ func NewGrpcServer(packageService *service.PackageService) *GrpcServer {
 
 // Start method runs server
 func (s *GrpcServer) Start() {
-
 	log := slog.With("func", "GrpcServer.Start")
 
 	cfg := config.GetConfigInstance()
@@ -125,7 +123,6 @@ func (s *GrpcServer) Start() {
 
 // Stop - stop gRPC server
 func (s *GrpcServer) Stop() error {
-
 	log := slog.With("func", "GrpcServer.Stop")
 
 	s.server.GracefulStop()

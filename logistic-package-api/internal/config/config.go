@@ -2,13 +2,13 @@
 package config
 
 import (
-	"fmt"
-	"gopkg.in/yaml.v3"
+	"log/slog"
 	"os"
 	"path/filepath"
+
+	"gopkg.in/yaml.v3"
 )
 
-// Build information -ldflags .
 const (
 	version    string = "dev"
 	commitHash string = "-"
@@ -25,8 +25,8 @@ func GetConfigInstance() *Config {
 	return &Config{}
 }
 
-// Database - contains all parameters database connection.
-type Database struct {
+// database - contains all parameters database connection.
+type database struct {
 	Host         string `yaml:"host"`
 	Port         string `yaml:"port"`
 	User         string `yaml:"user"`
@@ -38,8 +38,8 @@ type Database struct {
 	QueryTimeout int    `yaml:"queryTimeout"`
 }
 
-// Grpc - contains parameter address grpc.
-type Grpc struct {
+// grpc - contains parameter address grpc.
+type grpc struct {
 	Port              int    `yaml:"port"`
 	MaxConnectionIdle int64  `yaml:"maxConnectionIdle"`
 	Timeout           int64  `yaml:"timeout"`
@@ -47,14 +47,14 @@ type Grpc struct {
 	Host              string `yaml:"host"`
 }
 
-// Rest - contains parameter rest json connection.
-type Rest struct {
+// rest - contains parameter rest json connection.
+type rest struct {
 	Port int    `yaml:"port"`
 	Host string `yaml:"host"`
 }
 
-// Project - contains all parameters project information.
-type Project struct {
+// project - contains all parameters project information.
+type project struct {
 	Debug           bool   `yaml:"debug"`
 	Name            string `yaml:"name"`
 	Environment     string `yaml:"environment"`
@@ -65,21 +65,21 @@ type Project struct {
 	ShutdownTimeout int    `yaml:"shutdownTimeout"`
 }
 
-// Metrics - contains all parameters metrics information.
-type Metrics struct {
+// metrics - contains all parameters metrics information.
+type metrics struct {
 	Port int    `yaml:"port"`
 	Host string `yaml:"host"`
 	Path string `yaml:"path"`
 }
 
-// Jaeger - contains all parameters jaeger information.
-type Jaeger struct {
+// jaeger - contains all parameters jaeger information.
+type jaeger struct {
 	Host string `yaml:"host"`
 	Port string `yaml:"port"`
 }
 
-// Kafka - contains all parameters kafka information.
-type Kafka struct {
+// kafka - contains all parameters kafka information.
+type kafka struct {
 	Capacity       int      `yaml:"capacity"`
 	Topic          string   `yaml:"topic"`
 	GroupID        string   `yaml:"groupId"`
@@ -88,14 +88,14 @@ type Kafka struct {
 	SchemaRegistry string   `yaml:"schemaRegistry"`
 }
 
-type Outbox struct {
+type outbox struct {
 	BatchSize     int `yaml:"batchSize"`
 	Ticker        int `yaml:"ticker"`
 	ProducerCount int `yaml:"producerCount"`
 }
 
-// Status config for service.
-type Status struct {
+// status config for service.
+type status struct {
 	Port          int    `yaml:"port"`
 	Host          string `yaml:"host"`
 	VersionPath   string `yaml:"versionPath"`
@@ -105,15 +105,15 @@ type Status struct {
 
 // Config - contains all configuration parameters in config package.
 type Config struct {
-	Project  Project  `yaml:"project"`
-	Grpc     Grpc     `yaml:"grpc"`
-	Rest     Rest     `yaml:"rest"`
-	Database Database `yaml:"database"`
-	Metrics  Metrics  `yaml:"metrics"`
-	Jaeger   Jaeger   `yaml:"jaeger"`
-	Kafka    Kafka    `yaml:"kafka"`
-	Status   Status   `yaml:"status"`
-	Outbox   Outbox   `yaml:"outbox"`
+	Project  project  `yaml:"project"`
+	Grpc     grpc     `yaml:"grpc"`
+	Rest     rest     `yaml:"rest"`
+	Database database `yaml:"database"`
+	Metrics  metrics  `yaml:"metrics"`
+	Jaeger   jaeger   `yaml:"jaeger"`
+	Kafka    kafka    `yaml:"kafka"`
+	Status   status   `yaml:"status"`
+	Outbox   outbox   `yaml:"outbox"`
 }
 
 // ReadConfigYML - read configurations from file and init instance Config.
@@ -122,17 +122,23 @@ func ReadConfigYML(filePath string) error {
 		return nil
 	}
 
-	file, err1 := os.Open(filepath.Clean(filePath))
-	if err1 != nil {
-		return fmt.Errorf("config.ReadConfigYML: %w", err1)
+	log := slog.With("func", "ReadConfigYML")
+
+	file, err := os.Open(filepath.Clean(filePath))
+	if err != nil {
+		return err
 	}
+
 	defer func() {
-		_ = file.Close()
+		err1 := file.Close()
+		if err1 != nil {
+			log.Error("failed to close file", slog.String("error", err1.Error()))
+		}
 	}()
 
 	decoder := yaml.NewDecoder(file)
 	if err2 := decoder.Decode(&cfg); err2 != nil {
-		return fmt.Errorf("config.ReadConfigYML: %w", err2)
+		return err2
 	}
 
 	cfg.Project.Version = version

@@ -4,21 +4,21 @@ package database
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"os"
+
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/config"
 	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"log/slog"
-	"os"
 )
 
 /*
-PostgreSQL Error Codes
+Postgresql Error Codes
 https://www.postgresql.org/docs/16/errcodes-appendix.html
 */
 
 // MustGetPgxPool get pgxpool or os.Exit(1)
 func MustGetPgxPool(ctx context.Context) *pgxpool.Pool {
-
 	log := slog.With("func", "database.MustGetPgxPool")
 
 	dbpool, err1 := NewPgxPool(ctx)
@@ -32,7 +32,6 @@ func MustGetPgxPool(ctx context.Context) *pgxpool.Pool {
 
 // NewPgxPool create new pgxpool of connections to postgres
 func NewPgxPool(ctx context.Context) (*pgxpool.Pool, error) {
-
 	log := slog.With("func", "database.NewPgxPool")
 
 	cfg := config.GetConfigInstance()
@@ -58,7 +57,7 @@ func NewPgxPool(ctx context.Context) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("database.NewPgxPool: %w", err)
 	}
 
-	pgxConfig.ConnConfig.Tracer = otelpgx.NewTracer() // Добавляем OpenTelemtry трассировку для PostgreSQL
+	pgxConfig.ConnConfig.Tracer = otelpgx.NewTracer() // Добавляем OpenTelemetry трассировку для postgresql
 
 	dbpool, err1 := pgxpool.NewWithConfig(ctx, pgxConfig)
 	if err1 != nil {

@@ -3,11 +3,12 @@ package process
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"time"
+
 	"github.com/arslanovdi/logistic-package/events/internal/metric"
 	"github.com/arslanovdi/logistic-package/pkg/model"
 	"go.opentelemetry.io/otel/trace"
-	"log/slog"
-	"time"
 )
 
 var (
@@ -15,8 +16,8 @@ var (
 	avg      TimeAvg
 )
 
+// Инициализация глобальных переменных
 func init() {
-
 	packages = make(map[string]struct{})
 
 	avg = TimeAvg{
@@ -24,8 +25,8 @@ func init() {
 	}
 }
 
+// PrintPackageEvent выводит событие на консоль
 func PrintPackageEvent(ctx context.Context, packageID string, msg model.PackageEvent, offset int64) {
-
 	log := slog.With("func", "process.PrintPackageEvent")
 
 	if span := trace.SpanContextFromContext(ctx); span.IsSampled() { // вытягиваем span из контекста и пробрасываем в лог
@@ -35,16 +36,15 @@ func PrintPackageEvent(ctx context.Context, packageID string, msg model.PackageE
 	_, ok := packages[packageID]
 	if !ok {
 		packages[packageID] = struct{}{}
-		metric.PackageCounter.Inc()
+		metric.PackageCounter.Inc() // счетчик уникальных пакетов
 	}
 
 	_, err := fmt.Printf("offset: %d. event: %s\n", offset, msg.String())
-
-	log.Debug("PrintPackageEvent", slog.String("event", msg.String()))
-
 	if err != nil {
 		log.Error("Error formating", slog.String("error", err.Error()))
 	}
 
-	metric.EventsMinute.Set(float64(avg.Add()))
+	log.Debug("PrintPackageEvent", slog.String("event", msg.String()))
+
+	metric.EventsMinute.Set(float64(avg.Add())) // кол-во событий в минуту
 }

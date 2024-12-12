@@ -5,6 +5,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
+	"os"
+	"strconv"
+	"strings"
+	"sync"
+
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/config"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/general"
 	"github.com/arslanovdi/logistic-package/pkg/model"
@@ -14,17 +20,13 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/jsonschema"
 	"go.opentelemetry.io/otel/trace"
-	"log/slog"
-	"os"
-	"strconv"
-	"strings"
-	"sync"
 )
 
 // EventSender - интерфейс для отправки событий в кафку
 type EventSender interface {
-	// Send отправка сообщения в kafka. key = pkg.id (string); value = pkg.
+	// Send отправка сообщения в kafka. Key = pkg.id (string); value = pkg.
 	Send(ctx context.Context, pkg *model.PackageEvent, topic string) error
+	// Close sender
 	Close() error
 }
 
@@ -71,7 +73,7 @@ func (k *kafkaSender) Send(ctx context.Context, pkg *model.PackageEvent, topic s
 		Value: payload,
 	}
 
-	k.tracer.OnSend(ctx, &msg) // OpenTelemtry trace
+	k.tracer.OnSend(ctx, &msg) // OpenTelemetry trace
 
 	err = k.producer.Produce(&msg, deliveryChan)
 	if err != nil {
@@ -120,14 +122,13 @@ func MustNewKafkaSender() EventSender {
 		os.Exit(1)
 	}
 
-	jsoncfg := jsonschema.NewSerializerConfig()
-	jsoncfg.AutoRegisterSchemas = true
+	serializerConfig := jsonschema.NewSerializerConfig()
+	serializerConfig.AutoRegisterSchemas = true
 
 	serializer, err := jsonschema.NewSerializer(
 		sr,
 		serde.ValueSerde,
-		jsoncfg)
-
+		serializerConfig)
 	if err != nil {
 		log.Warn("Failed to create avro serializer", slog.String("error", err.Error()))
 		os.Exit(1)

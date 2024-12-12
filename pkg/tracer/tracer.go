@@ -4,6 +4,7 @@ package tracer
 import (
 	"context"
 	"errors"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
@@ -20,7 +21,7 @@ type Tracer struct {
 
 // NewTracer инициализация трассировки
 func NewTracer(ctx context.Context, instance, endpoint string) (*Tracer, error) {
-	exporter, provider, err := initOtel(ctx, instance, endpoint)
+	exporter, provider, err := initialize(ctx, instance, endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +33,6 @@ func NewTracer(ctx context.Context, instance, endpoint string) (*Tracer, error) 
 
 // Shutdown shuts down the trace exporter and trace provider.
 func (t *Tracer) Shutdown(ctx context.Context) error {
-
 	// Shutdown the trace provider.
 	err := t.provider.Shutdown(ctx)
 
@@ -47,9 +47,8 @@ func (t *Tracer) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-// initOtel init configures an OpenTelemetry exporter and trace provider.
-func initOtel(ctx context.Context, instance, endpoint string) (sdktrace.SpanExporter, *sdktrace.TracerProvider, error) {
-
+// configures an OpenTelemetry exporter and trace provider.
+func initialize(ctx context.Context, instance, endpoint string) (sdktrace.SpanExporter, *sdktrace.TracerProvider, error) {
 	exporter, err := otlptracegrpc.New( // grpc экспортер
 		ctx,
 		otlptracegrpc.WithInsecure(),
@@ -69,8 +68,6 @@ func initOtel(ctx context.Context, instance, endpoint string) (sdktrace.SpanExpo
 		sdktrace.WithBatcher(exporter),
 		sdktrace.WithSampler(
 			sdktrace.AlwaysSample(),
-			// trace.ParentBased(trace.TraceIDRatioBased(0.2)), // если нет родительского семплера, то 20% сэмплируем, иначе используем родительский
-			// trace.NeverSample(),
 		),
 	)
 

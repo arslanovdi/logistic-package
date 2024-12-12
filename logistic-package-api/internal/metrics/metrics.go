@@ -37,3 +37,11 @@ var RetranslatorEvents = promauto.NewGauge(prometheus.GaugeOpts{
 	Name:      "retranslator",
 	Help:      "Retranslator events in work",
 })
+
+// ProcessingTime - метрика времени обработки батча событий ретранслятором
+var ProcessingTime = promauto.NewGauge(prometheus.GaugeOpts{
+	Namespace: "logistic_package",
+	Subsystem: "events",
+	Name:      "processing_time",
+	Help:      "Processing time (seconds)",
+})

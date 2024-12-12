@@ -23,7 +23,7 @@ metrics:
   path: /metrics
 
 jaeger:
-  host: "127.0.0.1" #"jaeger" #
+  host: "127.0.0.1"
   port: ":4317"   # grpc 4317; http 6831
 
 status:
@@ -34,7 +34,7 @@ status:
   versionPath: /version
 
 database:
-  host: localhost #postgres #
+  host: localhost
   port: 5432
   user: logistic
   password: P@$$w0rd
@@ -45,15 +45,14 @@ database:
   queryTimeout: 5 # seconds query timeout
 
 kafka:
-  capacity: 512
   topic: "logistic-package-events"
   groupId: "logistic-package-api"
   flushTimeout: 5000 # milliseconds
   brokers:
-    - "localhost:29092" #- "kafka1:9092" #
-    - "localhost:29093" #- "kafka2:9092" #
-    - "localhost:29094" #- "kafka3:9092" #
-  schemaRegistry:  "http://localhost:8081" #"http://schemaregistry1:8081"
+    - "localhost:29092"
+    - "localhost:29093"
+    - "localhost:29094"
+  schemaRegistry:  "http://localhost:8081"
 
 outbox:
   batchSize: 100    # кол-во событий получаемых за один запрос из БД

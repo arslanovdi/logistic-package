@@ -1,18 +1,18 @@
-// Package logger provides logging functionality
-package logger
+package logger // Package logger - provides logging functionality
 
 import (
 	"log/slog"
 	"os"
 )
 
-var options *slog.HandlerOptions
-var loglevel *slog.LevelVar
+var (
+	options  *slog.HandlerOptions
+	loglevel *slog.LevelVar
+)
 
 // InitializeLogger initializes the slog logger
 func InitializeLogger(level slog.Level) {
-
-	HidePassword := func(_ []string, a slog.Attr) slog.Attr {
+	hidePassword := func(_ []string, a slog.Attr) slog.Attr {
 		if a.Key == "password" {
 			return slog.String("password", "********")
 		}
@@ -23,7 +23,7 @@ func InitializeLogger(level slog.Level) {
 
 	options = &slog.HandlerOptions{
 		AddSource:   false,
-		ReplaceAttr: HidePassword,
+		ReplaceAttr: hidePassword,
 		Level:       loglevel,
 	}
 
@@ -34,9 +34,8 @@ func InitializeLogger(level slog.Level) {
 }
 
 // SetLogLevel sets the level of the logger
-// В пакете slog нет установки уровня логирования в дефолтном логгере
+// В пакете slog нет установки уровня логирования
 func SetLogLevel(level slog.Level) {
-
 	log := slog.With("func", "SetLogLevel")
 
 	if options == nil {

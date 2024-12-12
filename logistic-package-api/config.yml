@@ -23,7 +23,7 @@ metrics:
   path: /metrics
 
 jaeger:
-  host: "jaeger" #"127.0.0.1" #
+  host: "jaeger"
   port: ":4317"   # grpc 4317; http 6831
 
 status:
@@ -45,7 +45,6 @@ database:
   queryTimeout: 5 # seconds query timeout
 
 kafka:
-  #capacity: 512
   topic: "logistic-package-events"
   groupId: "logistic-package-api"
   flushTimeout: 5000 # milliseconds

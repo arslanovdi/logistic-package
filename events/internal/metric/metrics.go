@@ -1,4 +1,4 @@
-package metric
+package metric // Package metric метрики
 
 import (
 	"github.com/prometheus/client_golang/prometheus"

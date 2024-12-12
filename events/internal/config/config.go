@@ -2,15 +2,22 @@
 package config
 
 import (
-	"gopkg.in/yaml.v3"
+	"log/slog"
 	"os"
 	"path/filepath"
+
+	"gopkg.in/yaml.v3"
+)
+
+const (
+	version    string = "dev"
+	commitHash string = "-"
 )
 
 var cfg *Config
 
-// Project - contains all parameters project information.
-type Project struct {
+// project - contains all parameters project information.
+type project struct {
 	Debug       bool   `yaml:"debug"`
 	Name        string `yaml:"name"`
 	Environment string `yaml:"environment"`
@@ -22,29 +29,29 @@ type Project struct {
 	ShutdownTimeout int `yaml:"shutdownTimeout"`
 }
 
-// Metrics - contains all parameters metrics information.
-type Metrics struct {
+// metrics - contains all parameters metrics information.
+type metrics struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
 	Path string `yaml:"path"`
 }
 
-// Jaeger - contains all parameters jaeger information.
-type Jaeger struct {
+// jaeger - contains all parameters jaeger information.
+type jaeger struct {
 	Host string `yaml:"host"`
 	Port string `yaml:"port"`
 }
 
-// Kafka - contains all parameters kafka information.
-type Kafka struct {
+// kafka - contains all parameters kafka information.
+type kafka struct {
 	Topic          string   `yaml:"topic"`
 	GroupID        string   `yaml:"groupId"`
 	Brokers        []string `yaml:"brokers"`
 	SchemaRegistry string   `yaml:"schemaRegistry"`
 }
 
-// Status config for service.
-type Status struct {
+// status config for service.
+type status struct {
 	Port          int    `yaml:"port"`
 	Host          string `yaml:"host"`
 	VersionPath   string `yaml:"versionPath"`
@@ -54,11 +61,11 @@ type Status struct {
 
 // Config - contains all configuration parameters in config package.
 type Config struct {
-	Project Project `yaml:"project"`
-	Metrics Metrics `yaml:"metrics"`
-	Jaeger  Jaeger  `yaml:"jaeger"`
-	Kafka   Kafka   `yaml:"kafka"`
-	Status  Status  `yaml:"status"`
+	Project project `yaml:"project"`
+	Metrics metrics `yaml:"metrics"`
+	Jaeger  jaeger  `yaml:"jaeger"`
+	Kafka   kafka   `yaml:"kafka"`
+	Status  status  `yaml:"status"`
 }
 
 // GetConfigInstance returns service config
@@ -71,25 +78,32 @@ func GetConfigInstance() *Config {
 }
 
 // ReadConfigYML - read configurations from file and init instance Config.
-func ReadConfigYML(filePath string) (err error) {
+func ReadConfigYML(filePath string) error {
 	if cfg != nil {
 		return nil
 	}
 
-	file, err1 := os.Open(filepath.Clean(filePath))
-	if err1 != nil {
-		return err1
+	log := slog.With("func", "ReadConfigYML")
+
+	file, err := os.Open(filepath.Clean(filePath))
+	if err != nil {
+		return err
 	}
+
+	defer func() {
+		err1 := file.Close()
+		if err1 != nil {
+			log.Error("failed to close file", slog.String("error", err1.Error()))
+		}
+	}()
 
 	decoder := yaml.NewDecoder(file)
 	if err2 := decoder.Decode(&cfg); err2 != nil {
 		return err2
 	}
 
-	err3 := file.Close()
-	if err3 != nil {
-		return err3
-	}
+	cfg.Project.Version = version
+	cfg.Project.CommitHash = commitHash
 
 	return nil
 }

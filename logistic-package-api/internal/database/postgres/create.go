@@ -4,24 +4,26 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
+
 	"github.com/arslanovdi/logistic-package/pkg/ctxutil"
 	"github.com/arslanovdi/logistic-package/pkg/model"
 	"github.com/jackc/pgx/v5"
 	"go.opentelemetry.io/otel/trace"
-	"log/slog"
 )
 
 // Create - create new package in database
 func (r *Repo) Create(ctx context.Context, pkg *model.Package) (*uint64, error) {
-
 	log := slog.With("func", "postgres.Create")
 
 	traceid := ""
 	span := trace.SpanContextFromContext(ctx)
 	if span.IsSampled() {
 		traceid = span.TraceID().String()
+		log.With("trace_id", traceid) // insert traceid to log
 	}
 
+	// сборка первого запроса - query
 	query, args, err1 := psql.Insert("package").
 		Columns("weight", "title", "created").
 		Values(pkg.Weight, pkg.Title, pkg.Created).
@@ -33,14 +35,15 @@ func (r *Repo) Create(ctx context.Context, pkg *model.Package) (*uint64, error) 
 
 	log.Debug("query", slog.String("query", query), slog.Any("args", args))
 
-	ctx = ctxutil.Detach(ctx)
+	ctx = ctxutil.Detach(ctx) // Отвязать таймер в контексте
 
-	err2 := pgx.BeginFunc(ctx, r.dbpool, func(tx pgx.Tx) error { // Запускаем транзакцию
-		err := tx.QueryRow(ctx, query, args...).Scan(&pkg.ID)
-
+	err2 := pgx.BeginFunc(ctx, r.dbpool, func(tx pgx.Tx) error { // Запуск транзакции, автоматический rollback при ошибке
+		err := tx.QueryRow(ctx, query, args...).Scan(&pkg.ID) // выполнить первый запрос
 		if err != nil {
 			return err
 		}
+
+		// сборка второго запроса - queryEvent
 		pkgJSON, err := json.Marshal(pkg)
 		if err != nil {
 			return err
@@ -48,7 +51,7 @@ func (r *Repo) Create(ctx context.Context, pkg *model.Package) (*uint64, error) 
 
 		pi := psql.Insert("package_events")
 
-		if span.IsSampled() {
+		if span.IsSampled() { // insert traceid to package_events if it exists
 			pi = pi.Columns("package_id", "type", "payload", "traceid").
 				Values(pkg.ID, model.Created, pkgJSON, traceid)
 		} else {
@@ -57,15 +60,13 @@ func (r *Repo) Create(ctx context.Context, pkg *model.Package) (*uint64, error) 
 		}
 
 		queryEvent, argsEvent, err := pi.ToSql()
-
 		if err != nil {
 			return err
 		}
 
 		log.Debug("queryEvent", slog.String("query", queryEvent), slog.Any("args", argsEvent))
 
-		_, err = tx.Exec(ctx, queryEvent, argsEvent...)
-
+		_, err = tx.Exec(ctx, queryEvent, argsEvent...) // выполнить второй запрос
 		if err != nil {
 			return err
 		}

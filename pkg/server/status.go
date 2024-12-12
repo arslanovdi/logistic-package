@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+const (
+	ReadHeaderTimeout = 5 * time.Second
+)
+
 // StatusServer - http сервер для мониторинга состояния приложения
 type StatusServer struct {
 	server *http.Server
@@ -19,6 +23,7 @@ type StatusServer struct {
 	info   *ProjectInfo
 }
 
+// StatusConfig - конфигурация http сервера
 type StatusConfig struct {
 	Host          string
 	Port          int
@@ -27,6 +32,7 @@ type StatusConfig struct {
 	VersionPath   string
 }
 
+// ProjectInfo - информация о приложении
 type ProjectInfo struct {
 	Name        string
 	Debug       bool
@@ -38,7 +44,6 @@ type ProjectInfo struct {
 
 // NewStatusServer - конструктор http сервера для мониторинга состояния приложения
 func NewStatusServer(isReady *atomic.Bool, cfg *StatusConfig, projectInfo *ProjectInfo) *StatusServer {
-
 	statusAddr := fmt.Sprintf("%s:%v", cfg.Host, cfg.Port)
 
 	mux := http.DefaultServeMux
@@ -50,7 +55,7 @@ func NewStatusServer(isReady *atomic.Bool, cfg *StatusConfig, projectInfo *Proje
 	server := &http.Server{
 		Addr:              statusAddr,
 		Handler:           mux,
-		ReadHeaderTimeout: time.Second * 5,
+		ReadHeaderTimeout: ReadHeaderTimeout,
 	}
 
 	return &StatusServer{
@@ -62,7 +67,6 @@ func NewStatusServer(isReady *atomic.Bool, cfg *StatusConfig, projectInfo *Proje
 
 // Start - запуск http сервера
 func (s *StatusServer) Start() {
-
 	log := slog.With("func", "StatusServer.Start")
 
 	statusAddr := fmt.Sprintf("%s:%v", s.config.Host, s.config.Port)
@@ -79,7 +83,6 @@ func (s *StatusServer) Start() {
 
 // Stop - остановка http сервера
 func (s *StatusServer) Stop(ctx context.Context) {
-
 	log := slog.With("func", "StatusServer.Stop")
 
 	if err1 := s.server.Shutdown(ctx); err1 != nil {
@@ -89,10 +92,12 @@ func (s *StatusServer) Stop(ctx context.Context) {
 	}
 }
 
+// healthy
 func livenessHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// ready
 func readinessHandler(isReady *atomic.Bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		if isReady == nil || !isReady.Load() {
@@ -104,12 +109,12 @@ func readinessHandler(isReady *atomic.Bool) http.HandlerFunc {
 	}
 }
 
+// version
 func versionHandler(projectInfo *ProjectInfo) func(w http.ResponseWriter, _ *http.Request) {
 	return func(w http.ResponseWriter, _ *http.Request) {
-
 		log := slog.With("func", "versionHandler")
 
-		data := map[string]interface{}{
+		data := map[string]any{
 			"name":        projectInfo.Name,
 			"debug":       projectInfo.Debug,
 			"environment": projectInfo.Environment,

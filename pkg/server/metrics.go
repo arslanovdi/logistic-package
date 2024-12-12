@@ -1,4 +1,4 @@
-package server
+package server // Package server - http сервера
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -26,7 +25,6 @@ type MetricsConfig struct {
 
 // NewMetricsServer returns http server for metrics
 func NewMetricsServer(cfg *MetricsConfig) *MetricsServer {
-
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 
 	mux := http.DefaultServeMux
@@ -35,7 +33,7 @@ func NewMetricsServer(cfg *MetricsConfig) *MetricsServer {
 	metrics := &http.Server{
 		Addr:              addr,
 		Handler:           mux,
-		ReadHeaderTimeout: time.Second * 5,
+		ReadHeaderTimeout: ReadHeaderTimeout,
 	}
 
 	return &MetricsServer{
@@ -46,7 +44,6 @@ func NewMetricsServer(cfg *MetricsConfig) *MetricsServer {
 
 // Start - запуск http сервера
 func (s *MetricsServer) Start() {
-
 	log := slog.With("func", "MetricsServer.Start")
 
 	metricsAddr := fmt.Sprintf("%s:%v", s.config.Host, s.config.Port)
@@ -63,7 +60,6 @@ func (s *MetricsServer) Start() {
 
 // Stop - остановка http сервера
 func (s *MetricsServer) Stop(ctx context.Context) {
-
 	log := slog.With("func", "MetricsServer.Stop")
 
 	if err := s.server.Shutdown(ctx); err != nil {

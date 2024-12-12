@@ -5,26 +5,28 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
+
 	sq "github.com/Masterminds/squirrel"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/general"
 	"github.com/arslanovdi/logistic-package/pkg/ctxutil"
 	"github.com/arslanovdi/logistic-package/pkg/model"
 	"github.com/jackc/pgx/v5"
 	"go.opentelemetry.io/otel/trace"
-	"log/slog"
 )
 
 // Update - update package by id in database
 func (r *Repo) Update(ctx context.Context, pkg *model.Package) error {
-
 	log := slog.With("func", "postgres.Update")
 
 	traceid := ""
 	span := trace.SpanContextFromContext(ctx)
 	if span.IsSampled() {
 		traceid = span.TraceID().String()
+		log.With("trace_id", traceid) // insert traceid to log
 	}
 
+	// сборка первого запроса - query
 	query, args, err1 := psql.Update("package").
 		Set("weight", pkg.Weight).
 		Set("title", pkg.Title).
@@ -38,11 +40,10 @@ func (r *Repo) Update(ctx context.Context, pkg *model.Package) error {
 
 	log.Debug("query", slog.String("query", query), slog.Any("args", args))
 
-	ctx = ctxutil.Detach(ctx)
+	ctx = ctxutil.Detach(ctx) // Отвязать таймер в контексте
 
-	err2 := pgx.BeginFunc(ctx, r.dbpool, func(tx pgx.Tx) error {
-
-		err := tx.QueryRow(ctx, query, args...).Scan(&pkg.Created, &pkg.Removed)
+	err2 := pgx.BeginFunc(ctx, r.dbpool, func(tx pgx.Tx) error { // Запуск транзакции, автоматический rollback при ошибке
+		err := tx.QueryRow(ctx, query, args...).Scan(&pkg.Created, &pkg.Removed) // выполнить первый запрос
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return general.ErrNotFound
@@ -50,13 +51,15 @@ func (r *Repo) Update(ctx context.Context, pkg *model.Package) error {
 			return err
 		}
 
+		// сборка второго запроса - queryEvent
 		pkgJSON, err := json.Marshal(pkg)
 		if err != nil {
 			return err
 		}
 
 		pi := psql.Insert("package_events")
-		if span.IsSampled() {
+
+		if span.IsSampled() { // insert traceid to package_events if it exists
 			pi = pi.Columns("package_id", "type", "payload", "traceid").
 				Values(pkg.ID, model.Updated, pkgJSON, traceid)
 		} else {
@@ -65,15 +68,13 @@ func (r *Repo) Update(ctx context.Context, pkg *model.Package) error {
 		}
 
 		queryEvent, argsEvent, err := pi.ToSql()
-
 		if err != nil {
 			return err
 		}
 
 		log.Debug("queryEvent", slog.String("query", queryEvent), slog.Any("args", argsEvent))
 
-		_, err = tx.Exec(ctx, queryEvent, argsEvent...)
-
+		_, err = tx.Exec(ctx, queryEvent, argsEvent...) // выполнить второй запрос
 		if err != nil {
 			return err
 		}

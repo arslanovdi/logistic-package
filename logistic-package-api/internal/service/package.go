@@ -4,15 +4,21 @@ package service
 import (
 	"context"
 	"fmt"
+
 	"github.com/arslanovdi/logistic-package/pkg/model"
 )
 
 // Repo interface for work with database
 type Repo interface {
+	// Create - create new package in database
 	Create(ctx context.Context, pkg *model.Package) (*uint64, error)
+	// Delete - delete package by id in database
 	Delete(ctx context.Context, id uint64) error
+	// Get - get package by id from database
 	Get(ctx context.Context, id uint64) (*model.Package, error)
+	// List - Get packages from database. start index - offset, count - limit
 	List(ctx context.Context, offset, limit uint64) ([]model.Package, error)
+	// Update - update package by id in database
 	Update(ctx context.Context, pkg *model.Package) error
 }
 
@@ -23,7 +29,6 @@ type PackageService struct {
 
 // Create - создание нового пакета
 func (p *PackageService) Create(ctx context.Context, pkg *model.Package) (*uint64, error) {
-
 	id, err := p.repo.Create(ctx, pkg)
 	if err != nil {
 		return nil, fmt.Errorf("service.PackageService.Create: %w", err)
@@ -34,7 +39,6 @@ func (p *PackageService) Create(ctx context.Context, pkg *model.Package) (*uint6
 
 // Delete - удаление пакета
 func (p *PackageService) Delete(ctx context.Context, id uint64) error {
-
 	err := p.repo.Delete(ctx, id)
 	if err != nil {
 		return fmt.Errorf("service.PackageService.Delete: %w", err)
@@ -45,7 +49,6 @@ func (p *PackageService) Delete(ctx context.Context, id uint64) error {
 
 // Get - получение пакета
 func (p *PackageService) Get(ctx context.Context, id uint64) (*model.Package, error) {
-
 	pkg, err := p.repo.Get(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("service.PackageService.Get: %w", err)
@@ -55,7 +58,6 @@ func (p *PackageService) Get(ctx context.Context, id uint64) (*model.Package, er
 
 // List - получение списка пакетов
 func (p *PackageService) List(ctx context.Context, offset, limit uint64) ([]model.Package, error) {
-
 	packages, err := p.repo.List(ctx, offset, limit)
 	if err != nil {
 		return nil, fmt.Errorf("service.PackageService.List: %w", err)
@@ -65,7 +67,6 @@ func (p *PackageService) List(ctx context.Context, offset, limit uint64) ([]mode
 
 // Update - изменение пакета
 func (p *PackageService) Update(ctx context.Context, pkg *model.Package) error {
-
 	err := p.repo.Update(ctx, pkg)
 	if err != nil {
 		return fmt.Errorf("service.PackageService.Update: %w", err)

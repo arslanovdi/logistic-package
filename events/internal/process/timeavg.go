@@ -12,6 +12,7 @@ type record struct {
 // TimeAvg - счетчик событий с ограничением по времени
 type TimeAvg struct {
 	root     *record
+	end      *record
 	count    int
 	Duration time.Duration
 }
@@ -22,15 +23,12 @@ func (c *TimeAvg) Add() int {
 		c.root = &record{
 			time: time.Now(),
 		}
+		c.end = c.root
 	} else {
-		// go to end
-		end := c.root
-		for end.next != nil {
-			end = end.next
-		}
-		end.next = &record{
+		c.end.next = &record{
 			time: time.Now(),
 		}
+		c.end = c.end.next
 	}
 	c.count++
 

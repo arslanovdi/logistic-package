@@ -3,37 +3,33 @@ package producer
 
 import (
 	"context"
+	"log/slog"
+	"sync"
+
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/config"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/metrics"
-	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/outbox/repo"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/outbox/sender"
 	"github.com/arslanovdi/logistic-package/pkg/model"
 	"go.opentelemetry.io/otel/trace"
-	"log/slog"
-	"sync"
 )
 
 // Producer читает из канала событий и отправляет в sender, в n потоков
 type Producer struct {
 	sender  sender.EventSender          // Интерфейс для отправки сообщений (kafka)
-	repo    repo.EventRepo              // Интерфейс для работы с БД
-	n       int                         // кол-во потоков
-	stop    chan struct{}               // канал для остановки
-	events  <-chan []model.PackageEvent // канал для получения событий
-	unlocks chan int64                  // канал для снятия блокировки с событий в БД (отправка в кавку неудачная)
-	removes chan int64                  // канал для удаления отправленных в кафку событий из БД
+	n       int                         // Кол-во потоков
+	stop    chan struct{}               // Канал для остановки
+	events  <-chan []model.PackageEvent // Канал для получения событий
+	unlocks chan int64                  // Канал для снятия блокировки с событий в БД (отправка в kafka неудачная)
+	removes chan int64                  // Канал для удаления отправленных в кафку событий из БД
 	wg      *sync.WaitGroup
 }
 
 // NewProducer конструктор
 func NewProducer(
 	s sender.EventSender,
-	r repo.EventRepo,
 	events <-chan []model.PackageEvent,
-	unlocks chan int64,
-	removes chan int64,
+	unlocks, removes chan int64,
 ) *Producer {
-
 	log := slog.With("func", "producer.NewProducer")
 
 	cfg := config.GetConfigInstance()
@@ -47,7 +43,6 @@ func NewProducer(
 		n:       cfg.Outbox.ProducerCount,
 		sender:  s,
 		events:  events,
-		repo:    r,
 		wg:      wg,
 		stop:    stop,
 		unlocks: unlocks,
@@ -66,15 +61,14 @@ func (p *Producer) Start(topic string) {
 				select {
 				case event := <-p.events: // получаем слайс событий по конкретному PackageID и отправляем их в kafka
 					for j := 0; j < len(event); j++ {
-
-						ctx := context.Background()
+						ctx := context.Background()  // контекст без трассировки
 						if event[j].TraceID != nil { // Есть информация о root TraceID
-							straceid := *event[j].TraceID
-							traceid, err := trace.TraceIDFromHex(straceid)
+							traceid, err := trace.TraceIDFromHex(*event[j].TraceID)
 							if err != nil {
 								log.Error("TraceID error", slog.String("error", err.Error()))
 							}
-							ctx = trace.ContextWithRemoteSpanContext(
+
+							ctx = trace.ContextWithRemoteSpanContext( // контекст с трассировкой
 								context.Background(),
 								trace.NewSpanContext(trace.SpanContextConfig{
 									TraceID:    traceid,
@@ -84,20 +78,19 @@ func (p *Producer) Start(topic string) {
 						}
 
 						err := p.sender.Send(ctx, &event[j], topic) // Поочередно отправляем события
-
 						if err != nil {
 							log.Error("Send event", slog.String("error", err.Error()))
 
-							p.unlocks <- event[j].ID // снимаем блокировку с события в БД, для повторной отправки, т.к. отправка в кавку неудачная
+							p.unlocks <- event[j].ID // Снять блокировку с события в БД, для повторной отправки, так как отправка в кавку неудачная
 
 							for l := j + 1; l < len(event); l++ {
-								p.unlocks <- event[l].ID // снимаем блокировку со всех последующих событий PackageID, для повторной отправки, чтобы не нарушать последовательность событий
+								p.unlocks <- event[l].ID // Снять блокировку со всех последующих событий PackageID, чтобы не нарушать последовательность событий
 							}
 
 							break
 						}
 
-						p.removes <- event[j].ID // удаляем событие из БД, т.к. оно обработано и отправлено в кавку
+						p.removes <- event[j].ID // Удалить событие из БД, так как оно обработано и отправлено в кавку
 					}
 					metrics.RetranslatorEvents.Add(-1 * float64(len(event))) // метрика, кол-во обрабатываемых событий
 
@@ -110,9 +103,8 @@ func (p *Producer) Start(topic string) {
 }
 
 // Stop останавливает пул и ждет, пока все задачи будут выполнены.
-// DBConcumer должен быть остановлен.
+// dbConsumer должен быть остановлен.
 func (p *Producer) Stop() {
-
 	log := slog.With("func", "producer.Stop")
 
 	close(p.stop)

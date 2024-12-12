@@ -11,25 +11,25 @@ linters:
   # Enable specific linter
   # https://golangci-lint.run/usage/linters/#enabled-by-default
   enable:
-    - asasalint
-    - asciicheck
-    - bidichk
+#    - asasalint
+#    - asciicheck
+#    - bidichk
     - bodyclose
-    - canonicalheader
+#    - canonicalheader
 #    - containedctx
-    - contextcheck
-    - copyloopvar
-    - cyclop
+#    - contextcheck
+#    - copyloopvar
+#    - cyclop
 #    - decorder
 #    - depguard
 #    - dogsled
     - dupl
-    - dupword
-    - durationcheck
+#    - dupword
+#    - durationcheck
 #    - err113
     - errcheck
 #    - errchkjson
-    - errname
+#    - errname
 #    - errorlint
 #    - execinquery
 #    - exhaustive
@@ -41,24 +41,24 @@ linters:
 #    - funlen
 #    - gci
 #    - ginkgolinter
-    - gocheckcompilerdirectives
+#    - gocheckcompilerdirectives
 #    - gochecknoglobals
 #    - gochecknoinits
 #    - gochecksumtype
 #    - gocognit
 #    - goconst
     - gocritic
-#    - gocyclo
+    - gocyclo
 #    - godot
 #    - godox
 #    - gofmt
-#    - gofumpt
+    - gofumpt
 #    - goheader
 #    - goimports
 #    - gomoddirectives
 #    - gomodguard
 #    - goprintffuncname
-#    - gosec
+    - gosec
     - gosimple
 #    - gosmopolitan
     - govet
@@ -73,9 +73,9 @@ linters:
 #    - lll
 #    - loggercheck
 #    - maintidx
-#    - makezero
+    - makezero
 #    - mirror
-#    - misspell
+    - misspell
 #    - mnd
 #    - musttag
 #    - nakedret
@@ -83,7 +83,7 @@ linters:
 #    - nilerr
 #    - nilnil
 #    - nlreturn
-#    - noctx
+    - noctx
 #    - nolintlint
 #    - nonamedreturns
 #    - nosprintfhostport
@@ -95,7 +95,7 @@ linters:
 #    - protogetter
 #    - reassign
 #    - recvcheck
-#    - revive
+    - revive
 #    - rowserrcheck
 #    - sloglint
 #    - spancheck
@@ -106,7 +106,7 @@ linters:
 #    - tagliatelle
 #    - tenv
 #    - testableexamples
-#    - testifylint
+    - testifylint
 #    - testpackage
 #    - thelper
 #    - tparallel
@@ -1260,7 +1260,7 @@ linters-settings:
   gocyclo:
     # Minimal code complexity to report.
     # Default: 30 (but we recommend 10-20)
-    min-complexity: 10
+    min-complexity: 15
 
   godot:
     # Comments to be checked: `declarations`, `toplevel`, or `all`.
@@ -1304,11 +1304,11 @@ linters-settings:
   gofumpt:
     # Module path which contains the source code being formatted.
     # Default: ""
-    module-path: github.com/org/project
+    module-path: "" #github.com/org/project
 
     # Choose whether to use the extra rules.
     # Default: false
-    extra-rules: true
+    extra-rules: false
 
   goheader:
     # Supports two types 'const` and `regexp`.
@@ -1565,61 +1565,61 @@ linters-settings:
     # To specify a set of rules to explicitly exclude.
     # Available rules: https://github.com/securego/gosec#available-rules
     # Default: []
-    excludes:
-      - G101 # Look for hard coded credentials
-      - G102 # Bind to all interfaces
-      - G103 # Audit the use of unsafe block
-      - G104 # Audit errors not checked
-      - G106 # Audit the use of ssh.InsecureIgnoreHostKey
-      - G107 # Url provided to HTTP request as taint input
-      - G108 # Profiling endpoint automatically exposed on /debug/pprof
-      - G109 # Potential Integer overflow made by strconv.Atoi result conversion to int16/32
-      - G110 # Potential DoS vulnerability via decompression bomb
-      - G111 # Potential directory traversal
-      - G112 # Potential slowloris attack
-      - G113 # Usage of Rat.SetString in math/big with an overflow (CVE-2022-23772)
-      - G114 # Use of net/http serve function that has no support for setting timeouts
-      - G115 # Potential integer overflow when converting between integer types
-      - G201 # SQL query construction using format string
-      - G202 # SQL query construction using string concatenation
-      - G203 # Use of unescaped data in HTML templates
-      - G204 # Audit use of command execution
-      - G301 # Poor file permissions used when creating a directory
-      - G302 # Poor file permissions used with chmod
-      - G303 # Creating tempfile using a predictable path
-      - G304 # File path provided as taint input
-      - G305 # File traversal when extracting zip/tar archive
-      - G306 # Poor file permissions used when writing to a new file
-      - G307 # Poor file permissions used when creating a file with os.Create
-      - G401 # Detect the usage of MD5 or SHA1
-      - G402 # Look for bad TLS connection settings
-      - G403 # Ensure minimum RSA key length of 2048 bits
-      - G404 # Insecure random number source (rand)
-      - G405 # Detect the usage of DES or RC4
-      - G406 # Detect the usage of MD4 or RIPEMD160
-      - G501 # Import blocklist: crypto/md5
-      - G502 # Import blocklist: crypto/des
-      - G503 # Import blocklist: crypto/rc4
-      - G504 # Import blocklist: net/http/cgi
-      - G505 # Import blocklist: crypto/sha1
-      - G506 # Import blocklist: golang.org/x/crypto/md4
-      - G507 #Import blocklist: golang.org/x/crypto/ripemd160
-      - G601 # Implicit memory aliasing of items from a range statement
-      - G602 # Slice access out of bounds
+#    excludes:
+#      - G101 # Look for hard coded credentials
+#      - G102 # Bind to all interfaces
+#      - G103 # Audit the use of unsafe block
+#      - G104 # Audit errors not checked
+#      - G106 # Audit the use of ssh.InsecureIgnoreHostKey
+#      - G107 # Url provided to HTTP request as taint input
+#      - G108 # Profiling endpoint automatically exposed on /debug/pprof
+#      - G109 # Potential Integer overflow made by strconv.Atoi result conversion to int16/32
+#      - G110 # Potential DoS vulnerability via decompression bomb
+#      - G111 # Potential directory traversal
+#      - G112 # Potential slowloris attack
+#      - G113 # Usage of Rat.SetString in math/big with an overflow (CVE-2022-23772)
+#      - G114 # Use of net/http serve function that has no support for setting timeouts
+#      - G115 # Potential integer overflow when converting between integer types
+#      - G201 # SQL query construction using format string
+#      - G202 # SQL query construction using string concatenation
+#      - G203 # Use of unescaped data in HTML templates
+#      - G204 # Audit use of command execution
+#      - G301 # Poor file permissions used when creating a directory
+#      - G302 # Poor file permissions used with chmod
+#      - G303 # Creating tempfile using a predictable path
+#      - G304 # File path provided as taint input
+#      - G305 # File traversal when extracting zip/tar archive
+#      - G306 # Poor file permissions used when writing to a new file
+#      - G307 # Poor file permissions used when creating a file with os.Create
+#      - G401 # Detect the usage of MD5 or SHA1
+#      - G402 # Look for bad TLS connection settings
+#      - G403 # Ensure minimum RSA key length of 2048 bits
+#      - G404 # Insecure random number source (rand)
+#      - G405 # Detect the usage of DES or RC4
+#      - G406 # Detect the usage of MD4 or RIPEMD160
+#      - G501 # Import blocklist: crypto/md5
+#      - G502 # Import blocklist: crypto/des
+#      - G503 # Import blocklist: crypto/rc4
+#      - G504 # Import blocklist: net/http/cgi
+#      - G505 # Import blocklist: crypto/sha1
+#      - G506 # Import blocklist: golang.org/x/crypto/md4
+#      - G507 #Import blocklist: golang.org/x/crypto/ripemd160
+#      - G601 # Implicit memory aliasing of items from a range statement
+#      - G602 # Slice access out of bounds
 
     # Exclude generated files
     # Default: false
-    exclude-generated: true
+    exclude-generated: false
 
     # Filter out the issues with a lower severity than the given value.
     # Valid options are: low, medium, high.
     # Default: low
-    severity: medium
+    severity: low
 
     # Filter out the issues with a lower confidence than the given value.
     # Valid options are: low, medium, high.
     # Default: low
-    confidence: medium
+    confidence: low
 
     # Concurrency value.
     # Default: the number of logical CPUs usable by the current process.
@@ -1634,17 +1634,17 @@ linters-settings:
         nosec: true
         # Add an alternative comment prefix to #nosec (both will work at the same time).
         # Default: ""
-        "#nosec": "#my-custom-nosec"
+        "#nosec": "" #"#my-custom-nosec"
         # Define whether nosec issues are counted as finding or not.
         # Default: false
-        show-ignored: true
+        show-ignored: false
         # Audit mode enables addition checks that for normal code analysis might be too nosy.
         # Default: false
-        audit: true
+        audit: false
       G101:
         # Regexp pattern for variables and constants to find.
         # Default: "(?i)passwd|pass|password|pwd|secret|token|pw|apiKey|bearer|cred"
-        pattern: "(?i)example"
+        pattern: "(?i)passwd|pass|password|pwd|secret|token|pw|apiKey|bearer|cred" #"(?i)example"
         # If true, complain about all cases (even with low entropy).
         # Default: false
         ignore_entropy: false
@@ -1657,7 +1657,7 @@ linters-settings:
         per_char_threshold: "3.0"
         # Calculate entropy for first N chars of the string.
         # Default: "16"
-        truncate: "32"
+        truncate: "16"
       # Additional functions to ignore while checking unhandled errors.
       Following functions always ignored:
       #   bytes.Buffer:
@@ -1690,7 +1690,7 @@ linters-settings:
       G111:
         # Regexp pattern to find potential directory traversal.
         # Default: "http\\.Dir\\(\"\\/\"\\)|http\\.Dir\\('\\/'\\)"
-        pattern: "custom\\.Dir\\(\\)"
+        pattern: "http\\.Dir\\(\"\\/\"\\)|http\\.Dir\\('\\/'\\)" #"custom\\.Dir\\(\\)"
       # Maximum allowed permissions mode for os.Mkdir and os.MkdirAll
       # Default: "0750"
       G301: "0750"
@@ -2065,7 +2065,7 @@ linters-settings:
   makezero:
     # Allow only slices initialized with a length of zero.
     # Default: false
-    always: true
+    always: false
 
   misspell:
     # Correct spellings using locale preferences for US or UK.
@@ -2076,21 +2076,21 @@ linters-settings:
     # Should be in lower case.
     # Default: []
     ignore-words:
-      - someword
+#      - someword
     # Extra word corrections.
     # `typo` and `correction` should only contain letters.
     # The words are case-insensitive.
     # Default: []
     extra-words:
-      - typo: "iff"
-        correction: "if"
-      - typo: "cancelation"
-        correction: "cancellation"
+#      - typo: "iff"
+#        correction: "if"
+#      - typo: "cancelation"
+#        correction: "cancellation"
     # Mode of the analysis:
     # - default: checks all the file content.
     # - restricted: checks only comments.
     # Default: ""
-    mode: restricted
+    mode: "" #restricted
 
   mnd:
     # List of enabled checks, see https://github.com/tommy-muehle/go-mnd/#checks for description.
@@ -2293,21 +2293,21 @@ linters-settings:
     # When set to false, ignores files with "GENERATED" header, similar to golint.
     # See https://github.com/mgechev/revive#configuration for details.
     # Default: false
-    ignore-generated-header: true
+    ignore-generated-header: false
 
     # Sets the default severity.
     # See https://github.com/mgechev/revive#configuration
     # Default: warning
-    severity: error
+    severity: warning
 
     # Enable all available rules.
     # Default: false
-    enable-all-rules: true
+    enable-all-rules: false
 
     # Sets the default failure confidence.
     # This means that linting errors with less than 0.8 confidence will be ignored.
     # Default: 0.8
-    confidence: 0.1
+    confidence: 0.8
 
     rules:
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#add-constant
@@ -2317,8 +2317,8 @@ linters-settings:
         exclude: [""]
         arguments:
           - maxLitCount: "3"
-            allowStrs: '""'
-            allowInts: "0,1,2"
+            allowStrs: '"","error","func","args","trace_id","id"'
+            allowInts: "0,1,2,3"
             allowFloats: "0.0,0.,1.0,1.,2.0,2."
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#argument-limit
       - name: argument-limit
@@ -2360,9 +2360,9 @@ linters-settings:
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#cognitive-complexity
       - name: cognitive-complexity
         severity: warning
-        disabled: false
+        disabled: true
         exclude: [""]
-        arguments: [ 7 ]
+        arguments: [ 16 ] #7
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#comment-spacings
       - name: comment-spacings
         severity: warning
@@ -2375,8 +2375,8 @@ linters-settings:
       - name: comments-density
         severity: warning
         disabled: false
-        exclude: [""]
-        arguments: [ 15 ]
+        exclude: ["_test\\.go"]
+        arguments: [ 12 ]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#confusing-naming
       - name: confusing-naming
         severity: warning
@@ -2409,7 +2409,7 @@ linters-settings:
         severity: warning
         disabled: false
         exclude: [""]
-        arguments: [ 3 ]
+        arguments: [ 10 ] # 5
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#datarace
       - name: datarace
         severity: warning
@@ -2418,7 +2418,7 @@ linters-settings:
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#deep-exit
       - name: deep-exit
         severity: warning
-        disabled: false
+        disabled: true
         exclude: [""]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#defer
       - name: defer
@@ -2509,14 +2509,14 @@ linters-settings:
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#file-header
       - name: file-header
         severity: warning
-        disabled: false
+        disabled: true
         exclude: [""]
         arguments:
-          - This is the text that must appear at the top of source files.
+          - ""
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#file-length-limit
       - name: file-length-limit
         severity: warning
-        disabled: false
+        disabled: true
         exclude: [""]
         arguments:
           - max: 100
@@ -2537,9 +2537,9 @@ linters-settings:
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#function-length
       - name: function-length
         severity: warning
-        disabled: false
+        disabled: true
         exclude: [""]
-        arguments: [ 10, 0 ]
+        arguments: [ 20, 0 ] # [10 , 0]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#function-result-limit
       - name: function-result-limit
         severity: warning
@@ -2598,19 +2598,19 @@ linters-settings:
         severity: warning
         disabled: false
         exclude: [""]
-        arguments: [ 80 ]
+        arguments: [ 160 ]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#max-control-nesting
       - name: max-control-nesting
         severity: warning
         disabled: false
         exclude: [""]
-        arguments: [ 3 ]
+        arguments: [ 5 ]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#max-public-structs
       - name: max-public-structs
         severity: warning
         disabled: false
         exclude: [""]
-        arguments: [ 3 ]
+        arguments: [ 4 ]
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#modifies-parameter
       - name: modifies-parameter
         severity: warning
@@ -2743,6 +2743,7 @@ linters-settings:
         arguments:
           - "fmt.Printf"
           - "myFunction"
+          - "strings.Builder.WriteString"
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unnecessary-stmt
       - name: unnecessary-stmt
         severity: warning
@@ -2763,7 +2764,7 @@ linters-settings:
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unused-receiver
       - name: unused-receiver
         severity: warning
-        disabled: false
+        disabled: true
         exclude: [""]
         arguments:
           - allowRegex: "^_"
@@ -3381,7 +3382,7 @@ linters-settings:
     bool-compare:
       # To ignore user defined types (over builtin bool).
       # Default: false
-      ignore-custom-types: true
+      ignore-custom-types: false
     expected-actual:
       # Regexp for expected variable name.
       # Default: (^(exp(ected)?|want(ed)?)([A-Z]\w*)?$)|(^(\w*[a-z])?(Exp(ected)?|Want(ed)?)$)
@@ -3731,10 +3732,10 @@ issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
     # Exclude some linters from running on tests files.
-#    - path: _test\.go
-#      linters:
+    - path: _test\.go
+      linters:
 #        - gocyclo
-#        - errcheck
+        - errcheck
 #        - dupl
 #        - gosec
 
