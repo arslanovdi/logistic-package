@@ -505,6 +505,34 @@ services:
       retries: 3
       start_period: 30s
 
+  redis1:
+    container_name: redis1
+    hostname: redis1
+    image: redis/redis-stack-server:latest
+    restart: unless-stopped
+    logging:
+      driver: 'gelf'
+      options:
+        gelf-address: 'udp://127.0.0.1:12201'
+        tag: redis1
+    ports:
+      - "6379:6379"
+    #environment:
+      #REDIS_ARGS: --save 60 1000 --appendonly yes --requirepass redis-stack
+      #REDISEARCH_ARGS:
+      #REDISJSON_ARGS:
+      #REDISTIMESERIES_ARGS: RETENTION_POLICY=20
+      #REDISBLOOM_ARGS:
+    depends_on:
+      graylog:
+        condition: service_healthy
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - ompnw
+
 volumes:
   pgdata:
     driver: local

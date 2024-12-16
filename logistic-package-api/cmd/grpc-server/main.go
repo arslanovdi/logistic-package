@@ -13,6 +13,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/cache"
+
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/database/postgres"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/service"
 	"github.com/arslanovdi/logistic-package/pkg/logger"
@@ -77,20 +79,6 @@ func main() {
 		slog.String("instance", cfg.Project.Instance),
 	)
 
-	dbpool := database.MustGetPgxPool(context.Background())
-
-	repo := postgres.NewPostgresRepo(dbpool)          // интерфейс работы с БД
-	packageService := service.NewPackageService(repo) // интерфейс работы с пакетами
-
-	if *migration { // миграция параметром из командной строки
-		log.Info("Migration started")
-		if err := goose.Up(stdlib.OpenDBFromPool(dbpool), // получаем соединение с базой данных из пула
-			cfg.Database.Migrations); err != nil {
-			log.Warn("Migration failed", slog.String("error", err.Error()))
-			os.Exit(1)
-		}
-	}
-
 	ctxTrace, cancelTrace := context.WithTimeout(context.Background(), startTimeout) // контекст запуска grpc экспортера в jaeger
 	defer cancelTrace()
 
@@ -111,9 +99,6 @@ func main() {
 		isReady.Store(true)
 		log.Info("The service is ready to accept requests")
 	}()
-
-	grpcServer := server.NewGrpcServer(packageService)
-	grpcServer.Start()
 
 	statusServer := pkgserver.NewStatusServer(
 		isReady,
@@ -142,6 +127,24 @@ func main() {
 			Path: cfg.Metrics.Path,
 		})
 	metricsServer.Start()
+
+	dbpool := database.MustGetPgxPool(context.Background())
+
+	repo := postgres.NewPostgresRepo(dbpool)           // интерфейс работы с БД
+	redis := cache.NewRedis(repo)                      // интерфейс работы с кэшем
+	packageService := service.NewPackageService(redis) // интерфейс работы с пакетами
+
+	if *migration { // миграция параметром из командной строки
+		log.Info("Migration started")
+		if err := goose.Up(stdlib.OpenDBFromPool(dbpool), // получаем соединение с базой данных из пула
+			cfg.Database.Migrations); err != nil {
+			log.Warn("Migration failed", slog.String("error", err.Error()))
+			os.Exit(1)
+		}
+	}
+
+	grpcServer := server.NewGrpcServer(packageService)
+	grpcServer.Start()
 
 	gatewayServer := server.NewGatewayServer() // grpc-gateway
 	gatewayServer.Start()
@@ -175,6 +178,7 @@ func main() {
 		log.Error("Error shutting down tracer provider", slog.String("error", err4.Error()))
 	}
 
+	redis.Close()
 	dbpool.Close()
 
 	statusServer.Stop(ctxShutdown)

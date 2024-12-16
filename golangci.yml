@@ -2318,7 +2318,7 @@ linters-settings:
         arguments:
           - maxLitCount: "3"
             allowStrs: '"","error","func","args","trace_id","id"'
-            allowInts: "0,1,2,3"
+            allowInts: "0,1,2,3,10"
             allowFloats: "0.0,0.,1.0,1.,2.0,2."
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#argument-limit
       - name: argument-limit
@@ -2409,7 +2409,7 @@ linters-settings:
         severity: warning
         disabled: false
         exclude: [""]
-        arguments: [ 10 ] # 5
+        arguments: [ 11 ] # 5
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#datarace
       - name: datarace
         severity: warning
@@ -3738,6 +3738,7 @@ issues:
         - errcheck
 #        - dupl
 #        - gosec
+
 
     # Run some linter only for test files by excluding its issues for everything else.
 #    - path-except: _test\.go

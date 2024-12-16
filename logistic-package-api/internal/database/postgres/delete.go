@@ -7,7 +7,6 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/general"
-	"github.com/arslanovdi/logistic-package/pkg/ctxutil"
 	"github.com/arslanovdi/logistic-package/pkg/model"
 	"github.com/jackc/pgx/v5"
 	"go.opentelemetry.io/otel/trace"
@@ -54,7 +53,7 @@ func (r *Repo) Delete(ctx context.Context, id uint64) error {
 
 	log.Debug("queryEvent", slog.String("query", queryEvent), slog.Any("args", argsEvent))
 
-	ctx = ctxutil.Detach(ctx) // Отвязать таймер в контексте
+	ctx = context.WithoutCancel(ctx) // Отвязать контекст, нужно завершить операцию, даже если клиент отвалился
 
 	err3 := pgx.BeginFunc(ctx, r.dbpool, func(tx pgx.Tx) error { // Запуск транзакции, автоматический rollback при ошибке
 		tag, err := tx.Exec(ctx, query, args...) // выполнить первый запрос

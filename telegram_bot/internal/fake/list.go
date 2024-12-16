@@ -12,11 +12,10 @@ func (f *Faker) eList() {
 
 	log := slog.With("func", "fake.eList")
 
-	offset := genInt(f.counter - listCount) // случайное смещение, до половины созданных пакетов
+	offset := genInt(f.counter / 2) // случайное смещение, до половины созданных пакетов
 	limit := genInt(listCount)
 
 	_, err := f.pkgService.List(offset, limit)
-
 	if err != nil {
 		log.Error("FAKE fail to list package", "error", err)
 	}

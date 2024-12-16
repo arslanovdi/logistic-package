@@ -926,10 +926,10 @@ func (m *ListV1Request) validate(all bool) error {
 
 	var errors []error
 
-	if m.GetOffset() <= 0 {
+	if m.GetOffset() < 0 {
 		err := ListV1RequestValidationError{
 			field:  "Offset",
-			reason: "value must be greater than 0",
+			reason: "value must be greater than or equal to 0",
 		}
 		if !all {
 			return err

@@ -103,6 +103,14 @@ type status struct {
 	ReadinessPath string `yaml:"readinessPath"`
 }
 
+type redis struct {
+	Addr          string `yaml:"addr"`
+	Password      string `yaml:"password"`
+	DB            int    `yaml:"db"`
+	TTL           int    `yaml:"ttl"`
+	RetryDuration int    `yaml:"retryDuration"`
+}
+
 // Config - contains all configuration parameters in config package.
 type Config struct {
 	Project  project  `yaml:"project"`
@@ -114,6 +122,7 @@ type Config struct {
 	Kafka    kafka    `yaml:"kafka"`
 	Status   status   `yaml:"status"`
 	Outbox   outbox   `yaml:"outbox"`
+	Redis    redis    `yaml:"redis"`
 }
 
 // ReadConfigYML - read configurations from file and init instance Config.

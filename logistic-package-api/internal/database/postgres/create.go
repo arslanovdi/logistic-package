@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/arslanovdi/logistic-package/pkg/ctxutil"
 	"github.com/arslanovdi/logistic-package/pkg/model"
 	"github.com/jackc/pgx/v5"
 	"go.opentelemetry.io/otel/trace"
@@ -35,7 +34,7 @@ func (r *Repo) Create(ctx context.Context, pkg *model.Package) (*uint64, error) 
 
 	log.Debug("query", slog.String("query", query), slog.Any("args", args))
 
-	ctx = ctxutil.Detach(ctx) // Отвязать таймер в контексте
+	ctx = context.WithoutCancel(ctx) // Отвязать контекст, нужно завершить операцию, даже если клиент отвалился
 
 	err2 := pgx.BeginFunc(ctx, r.dbpool, func(tx pgx.Tx) error { // Запуск транзакции, автоматический rollback при ошибке
 		err := tx.QueryRow(ctx, query, args...).Scan(&pkg.ID) // выполнить первый запрос

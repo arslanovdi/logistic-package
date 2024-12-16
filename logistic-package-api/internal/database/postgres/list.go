@@ -10,7 +10,6 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/arslanovdi/logistic-package/logistic-package-api/internal/general"
-	"github.com/arslanovdi/logistic-package/pkg/ctxutil"
 	"github.com/arslanovdi/logistic-package/pkg/model"
 	"github.com/jackc/pgx/v5"
 )
@@ -38,7 +37,7 @@ func (r *Repo) List(ctx context.Context, offset, limit uint64) ([]model.Package,
 
 	log.Debug("query", slog.String("query", query), slog.Any("args", args))
 
-	ctx = ctxutil.Detach(ctx) // Отвязать таймер в контексте
+	ctx = context.WithoutCancel(ctx) // Отвязать контекст, нужно завершить операцию, даже если клиент отвалился
 
 	// выполнить запрос
 	rows, _ := r.dbpool.Query(ctx, query, args...) //nolint:errcheck // Ошибка игнорируется, так как она обрабатывается в CollectRows

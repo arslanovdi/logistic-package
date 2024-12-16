@@ -62,7 +62,6 @@ func main() {
 		context.Background(),
 		time.Second*time.Duration(cfg.Project.StartupTimeout)) // контекст запуска приложения
 	defer cancel()
-
 	go func() {
 		<-startCtx.Done()
 		if errors.Is(startCtx.Err(), context.DeadlineExceeded) { // приложение зависло при запуске

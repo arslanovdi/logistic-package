@@ -76,7 +76,7 @@ message GetV1Response {
 }
 
 message ListV1Request {
-  uint64 offset = 1 [(validate.rules).uint64.gt = 0];
+  uint64 offset = 1 [(validate.rules).uint64.gte = 0];
   uint64 limit = 2 [(validate.rules).uint64.gt = 0];
 }
 

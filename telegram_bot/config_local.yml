@@ -9,7 +9,7 @@ project:
 grpc:
   host: localhost
   port: 8082
-  ctxTimeout: 5s
+  ctxTimeout: 10s
 
 jaeger:
   host: localhost

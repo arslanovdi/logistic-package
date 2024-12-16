@@ -42,17 +42,38 @@ func TestRetranslator(t *testing.T) {
 		repoMock := mocks.NewEventRepo(t)
 		senderMock := mocks.NewEventSender(t)
 
-		repoMock.EXPECT().UnlockAll(mock.AnythingOfType("*context.timerCtx")).Return(nil)
+		// UnlockAll должен вызываться при инициализации ретранслятора
+		repoMock.EXPECT().
+			UnlockAll(mock.AnythingOfType("*context.timerCtx")).
+			Return(nil)
 		r := retranslator.NewRetranslator(repoMock, senderMock)
 
-		repoMock.EXPECT().Lock(mock.AnythingOfType("*context.timerCtx"), mock.AnythingOfType("int")).Return([]model.PackageEvent{event}, nil)
-		senderMock.EXPECT().Send(mock.AnythingOfType("context.backgroundCtx"), mock.AnythingOfType("*model.PackageEvent"), "test_topic").Return(nil)
-		repoMock.EXPECT().Remove(mock.AnythingOfType("*context.timerCtx"), []int64{55}).Return(nil)
-		repoMock.AssertNotCalled(t, "Unlock", mock.AnythingOfType("*context.timerCtx"), mock.AnythingOfType("[]int64]"))
+		// Проверка вызовов при успешном чтении из БД и отправке в кафку
+		repoMock.EXPECT().
+			Lock(mock.AnythingOfType("*context.timerCtx"),
+				mock.AnythingOfType("int")).
+			Return([]model.PackageEvent{event}, nil)
+
+		senderMock.EXPECT().
+			Send(mock.AnythingOfType("context.backgroundCtx"),
+				mock.AnythingOfType("*model.PackageEvent"),
+				"test_topic").
+			Return(nil)
+
+		repoMock.EXPECT().
+			Remove(mock.AnythingOfType("*context.timerCtx"),
+				[]int64{55}).
+			Return(nil)
+
+		repoMock.AssertNotCalled(t,
+			"Unlock",
+			mock.AnythingOfType("*context.timerCtx"),
+			mock.AnythingOfType("[]int64]"))
 
 		r.Start("test_topic")
 
-		time.Sleep(time.Second * time.Duration(cfg.Outbox.Ticker+1)) // Ждем пока сработает тикер, по которому происходит чтение из БД. 1 секунды должно быть достаточно для отправки 1 сообщения.
+		// Ждем пока сработает тикер, по которому происходит чтение из БД. 1 секунды должно быть достаточно для отправки 1 сообщения.
+		time.Sleep(time.Second * time.Duration(cfg.Outbox.Ticker+1))
 
 		r.Stop()
 	})
@@ -71,17 +92,38 @@ func TestRetranslator(t *testing.T) {
 		repoMock := mocks.NewEventRepo(t)
 		senderMock := mocks.NewEventSender(t)
 
-		repoMock.EXPECT().UnlockAll(mock.AnythingOfType("*context.timerCtx")).Return(nil)
+		// UnlockAll должен вызываться при инициализации ретранслятора
+		repoMock.EXPECT().
+			UnlockAll(mock.AnythingOfType("*context.timerCtx")).
+			Return(nil)
 		r := retranslator.NewRetranslator(repoMock, senderMock)
 
-		repoMock.EXPECT().Lock(mock.AnythingOfType("*context.timerCtx"), mock.AnythingOfType("int")).Return([]model.PackageEvent{event}, nil)
-		senderMock.EXPECT().Send(mock.AnythingOfType("context.backgroundCtx"), mock.AnythingOfType("*model.PackageEvent"), "test_topic").Return(kafka.NewError(kafka.ErrMsgTimedOut, "dont send", false))
-		repoMock.EXPECT().Unlock(mock.AnythingOfType("*context.timerCtx"), []int64{55}).Return(nil)
-		repoMock.AssertNotCalled(t, "Remove", mock.AnythingOfType("*context.timerCtx"), mock.AnythingOfType("[]int64"))
+		// Проверка вызовов при успешном чтении из БД и ошибке отправки в кафку
+		repoMock.EXPECT().
+			Lock(mock.AnythingOfType("*context.timerCtx"),
+				mock.AnythingOfType("int")).
+			Return([]model.PackageEvent{event}, nil)
+
+		senderMock.EXPECT().
+			Send(mock.AnythingOfType("context.backgroundCtx"),
+				mock.AnythingOfType("*model.PackageEvent"),
+				"test_topic").
+			Return(kafka.NewError(kafka.ErrMsgTimedOut, "dont send", false))
+
+		repoMock.EXPECT().
+			Unlock(mock.AnythingOfType("*context.timerCtx"),
+				[]int64{55}).
+			Return(nil)
+
+		repoMock.AssertNotCalled(t,
+			"Remove",
+			mock.AnythingOfType("*context.timerCtx"),
+			mock.AnythingOfType("[]int64"))
 
 		r.Start("test_topic")
 
-		time.Sleep(time.Second * time.Duration(cfg.Outbox.Ticker+1)) // Ждем пока сработает тикер, по которому происходит чтение из БД. 1 секунды должно быть достаточно для отправки 1 сообщения.
+		// Ждем пока сработает тикер, по которому происходит чтение из БД. 1 секунды должно быть достаточно для отправки 1 сообщения.
+		time.Sleep(time.Second * time.Duration(cfg.Outbox.Ticker+1))
 
 		r.Stop()
 	})

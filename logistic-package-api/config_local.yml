@@ -58,3 +58,10 @@ outbox:
   batchSize: 100    # кол-во событий получаемых за один запрос из БД
   ticker: 10        # load events every ticker seconds
   producerCount: 20 # кол-во потоков, отправляющих в кафку
+
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 0
+  ttl: 600 # seconds
+  retryDuration: 10 # seconds
