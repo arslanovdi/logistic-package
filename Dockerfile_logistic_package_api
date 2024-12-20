@@ -1,5 +1,7 @@
 #builder
-FROM golang:1.23.3-bullseye AS builder
+FROM golang:1.23.3-alpine AS builder
+
+RUN apk add --no-cache make curl
 
 COPY logistic-package-api/Makefile /home/Makefile
 COPY go.mod /home
@@ -10,16 +12,20 @@ WORKDIR /home
 RUN make deps-go
 
 COPY .. /home
+COPY logistic-package-api/Makefile /home/Makefile
+
 # собираем
 RUN make build-go
 
 
 # gRPC Server
-FROM golang:1.23.3-bullseye AS server
+FROM alpine:latest AS server
 
-ARG GITHUB_PATH=github.com/arslanovdi/logistic-package/logistic-package-api/
+ARG GITHUB_PATH=github.com/arslanovdi/logistic-package
 
 LABEL org.opencontainers.image.source=https://${GITHUB_PATH}
+
+RUN apk --no-cache add ca-certificates curl
 
 WORKDIR /root/
 # копируем все что нужно для работы приложения
@@ -35,5 +41,6 @@ EXPOSE 8080
 EXPOSE 8082
 EXPOSE 9100
 EXPOSE 8000
+
 
 CMD ["./grpc-server", "-config=config.yml"]

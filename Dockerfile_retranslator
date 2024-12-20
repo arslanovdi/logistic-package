@@ -1,5 +1,7 @@
 #builder
-FROM golang:1.23.3-bullseye AS builder
+FROM golang:1.23.3-alpine AS builder
+
+RUN apk add --no-cache make gcc musl-dev
 
 COPY logistic-package-api/Makefile /home/Makefile
 COPY go.mod /home
@@ -8,17 +10,20 @@ COPY go.sum /home
 WORKDIR /home
 
 COPY .. /home
+COPY logistic-package-api/Makefile /home/Makefile
 
 # собираем
 RUN make build-outbox
 
 
 # retranslator
-FROM golang:1.23.3-bullseye AS server
+FROM alpine:latest AS server
 
-ARG GITHUB_PATH=github.com/arslanovdi/logistic-package/logistic-package-api
+ARG GITHUB_PATH=github.com/arslanovdi/logistic-package
 
 LABEL org.opencontainers.image.source=https://${GITHUB_PATH}
+
+RUN apk --no-cache add ca-certificates curl
 
 WORKDIR /root/
 # копируем все что нужно для работы приложения
@@ -28,5 +33,6 @@ COPY --from=builder /home/logistic-package-api/config.yml .
 RUN chown root:root retranslator
 
 EXPOSE 8000
+EXPOSE 9100
 
 CMD ["./retranslator", "-config=config.yml"]

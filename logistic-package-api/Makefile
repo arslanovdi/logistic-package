@@ -38,12 +38,12 @@ deps-go:
 build-go: generate-go .build
 
 .build:
-	go mod download && CGO_ENABLED=1  go build \
+	go mod download && CGO_ENABLED=0  go build \
 		-o ./bin/grpc-server$(shell go env GOEXE) ./logistic-package-api/cmd/grpc-server/main.go
 
 .PHONY: build-outbox
 build-outbox: .build-outbox
 
 .build-outbox:
-	go mod download && CGO_ENABLED=1  go build \
+	go mod download && CGO_ENABLED=1  go build -tags musl \
     		-o ./bin/retranslator$(shell go env GOEXE) ./logistic-package-api/cmd/retranslator/main.go

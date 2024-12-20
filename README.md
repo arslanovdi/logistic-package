@@ -2,17 +2,17 @@
 
 [Структура проекта](https://excalidraw.com/#json=RP4dRHa6Dl6EXyjuhGjm0,clMlq2Sv7C2-38J6rDz24w)
 
-[Prometheus](localhost:9090)
+[Prometheus](http://localhost:9090)
 
-[Jaeger](localhost:16686)
+[Jaeger](http://localhost:16686)
 
-[Graylog](localhost:9000)
+[Graylog](http://localhost:9000)
 
-[OpenSearch Dashboards](localhost:5601)
+[OpenSearch Dashboards](http://localhost:5601)
 
-[KafkaUI](localhost:9001)
+[KafkaUI](http://localhost:9001)
 
-[SchemaRegistry](localhost:8081)
+[SchemaRegistry](http://localhost:8081)
 
-[Grafana](localhost:3000)
+[Grafana](http://localhost:3000)
 

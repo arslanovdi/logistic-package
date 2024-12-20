@@ -1,5 +1,7 @@
 #builder
-FROM golang:1.23.3-bullseye AS builder
+FROM golang:1.23.3-alpine AS builder
+
+RUN apk add --no-cache make
 
 COPY telegram_bot/Makefile /home/Makefile
 COPY go.mod /home
@@ -8,17 +10,20 @@ COPY go.sum /home
 WORKDIR /home
 
 COPY .. /home
+COPY telegram_bot/Makefile /home/Makefile
 
 # собираем
 RUN make build-tgbot
 
 
 # tgbot
-FROM golang:1.23.3-bullseye AS server
+FROM alpine:latest AS server
 
-ARG GITHUB_PATH=github.com/arslanovdi/logistic-package/telegram_bot
+ARG GITHUB_PATH=github.com/arslanovdi/logistic-package
 
 LABEL org.opencontainers.image.source=https://${GITHUB_PATH}
+
+RUN apk --no-cache add ca-certificates curl
 
 WORKDIR /root/
 # копируем все что нужно для работы приложения
@@ -26,5 +31,8 @@ COPY --from=builder /home/bin/tg_bot .
 COPY --from=builder /home/telegram_bot/config.yml .
 
 RUN chown root:root tg_bot
+
+EXPOSE 8000
+EXPOSE 9100
 
 CMD ["./tg_bot", "-config=config.yml"]

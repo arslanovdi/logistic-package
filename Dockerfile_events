@@ -1,24 +1,25 @@
 #builder
-FROM golang:1.23.3-bullseye AS builder
+FROM golang:1.23.3-alpine AS builder
 
-COPY events/Makefile /home/Makefile
-COPY go.mod /home
-COPY go.sum /home
+RUN apk add --no-cache make gcc musl-dev
 
 WORKDIR /home
 
 COPY .. /home
+COPY events/Makefile /home/Makefile
 
 # собираем
 RUN make build-events
 
 
 # events
-FROM golang:1.23.3-bullseye AS server
+FROM alpine:latest AS server
 
-ARG GITHUB_PATH=github.com/arslanovdi/logistic-package/events
+ARG GITHUB_PATH=github.com/arslanovdi/logistic-package
 
 LABEL org.opencontainers.image.source=https://${GITHUB_PATH}
+
+RUN apk --no-cache add ca-certificates curl
 
 WORKDIR /root/
 # копируем все что нужно для работы приложения
@@ -26,5 +27,8 @@ COPY --from=builder /home/bin/events .
 COPY --from=builder /home/events/config.yml .
 
 RUN chown root:root events
+
+EXPOSE 8000
+EXPOSE 9100
 
 CMD ["./events", "-config=config.yml"]
