@@ -1,4 +1,4 @@
-## Пет проект на базе курса для Go-мидлов Route256.
+## Проект на базе курса для Go-мидлов Route256.
 
 [Структура проекта](https://excalidraw.com/#json=RP4dRHa6Dl6EXyjuhGjm0,clMlq2Sv7C2-38J6rDz24w)
 

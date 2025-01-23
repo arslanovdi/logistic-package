@@ -26,13 +26,14 @@ LABEL org.opencontainers.image.source=https://${GITHUB_PATH}
 RUN apk --no-cache add ca-certificates curl
 
 WORKDIR /root/
+RUN mkdir config  # папка для монтирования конфигурации из k8s ConfigMap
 # копируем все что нужно для работы приложения
 COPY --from=builder /home/bin/retranslator .
-COPY --from=builder /home/logistic-package-api/config.yml .
+COPY --from=builder /home/logistic-package-api/config.yml /root/config/config.yml
 
 RUN chown root:root retranslator
 
 EXPOSE 8000
 EXPOSE 9100
 
-CMD ["./retranslator", "-config=config.yml"]
+CMD ["./retranslator", "-config=config/config.yml"]

@@ -22,13 +22,14 @@ LABEL org.opencontainers.image.source=https://${GITHUB_PATH}
 RUN apk --no-cache add ca-certificates curl
 
 WORKDIR /root/
+RUN mkdir config  # папка для монтирования конфигурации из k8s ConfigMap
 # копируем все что нужно для работы приложения
 COPY --from=builder /home/bin/events .
-COPY --from=builder /home/events/config.yml .
+COPY --from=builder /home/events/config.yml /root/config/config.yml
 
 RUN chown root:root events
 
 EXPOSE 8000
 EXPOSE 9100
 
-CMD ["./events", "-config=config.yml"]
+CMD ["./events", "-config=config/config.yml"]
