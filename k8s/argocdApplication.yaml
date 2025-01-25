@@ -10,11 +10,12 @@ spec:
   source:
     directory:
       recurse: true
+      include: "{*.yml,*.yaml}"
     path: k8s
     repoURL: https://github.com/arslanovdi/logistic-package
     targetRevision: LP-2--k8s-
   syncPolicy:
     automated:
-      prune: false      # Не удалять ресурсы при синхронизации
-      selfHeal: false   # Возвращать состояние, если оно было изменено.
+      prune: true       # Не удалять ресурсы при синхронизации
+      selfHeal: true    # Возвращать состояние, если оно было изменено.
       allowEmpty: true  # Разрешать пустые ресурсы.
