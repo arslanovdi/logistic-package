@@ -1,0 +1,68 @@
+# Логирование в graylog?
+# Зависимости при запуске?
+# set instance name
+# service name from helm values
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: events
+  namespace: logistic-package
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: events
+      version: stable
+  template:
+    metadata:
+      labels:
+        app: events
+        version: stable
+    spec:
+      containers:
+        - name: events
+          image: arslanovdi/events:v0.1.2
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "25m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+            - containerPort: 9100
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: "/live"
+              port: 8000
+            failureThreshold: 3       # количество последовательных неудачных проверок, чтобы считать контейнер мертвым...
+            initialDelaySeconds: 30   # секунд до начала проверки
+            periodSeconds: 60         # секунд между проверками
+            timeoutSeconds: 10        # секунд ожидания ответа, если превышено то проба неудачная
+            successThreshold: 1     # количество последовательных успешных проверок, чтобы подтвердить состояние
+            terminationGracePeriodSeconds: 10 # секунд ожидания после получения SIGTERM
+          readinessProbe:
+            httpGet:
+              path: "/ready"
+              port: 8000
+            failureThreshold: 3       # количество последовательных неудачных проверок, чтобы считать контейнер мертвым...
+            initialDelaySeconds: 30   # секунд до начала проверки
+            periodSeconds: 15         # секунд между проверками
+            timeoutSeconds: 10        # секунд ожидания ответа, если превышено то проба неудачная
+            successThreshold: 1       # количество последовательных успешных проверок, чтобы подтвердить состояние
+          env:
+            - name: KAFKA_BROKERS
+              value: "kafka-cluster-kafka-brokers.kafka.svc.cluster.local:9092"
+            - name: SCHEMA_REGISTRY_URL
+              value: "http://schemaregistry.kafka.svc.cluster.local:8081"
+          volumeMounts:
+            - name: config
+              mountPath: "/root/config"
+      volumes:
+        - name: config
+          configMap:
+            name: events

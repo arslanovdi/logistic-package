@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: logistic-package
+  namespace: argocd
+spec:
+  destination:
+    server: https://192.168.2.50:6443
+  project: default
+  source:
+    path: k8s
+    repoURL: https://github.com/arslanovdi/logistic-package
+    targetRevision: LP-2--k8s-
+  syncPolicy:
+    automated:
+      prune: false      # Не удалять ресурсы при синхронизации
+      selfHeal: false   # Возвращать состояние, если оно было изменено.
+      allowEmpty: true  # Разрешать пустые ресурсы.

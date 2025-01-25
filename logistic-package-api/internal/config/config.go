@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -152,6 +153,34 @@ func ReadConfigYML(filePath string) error {
 
 	cfg.Project.Version = version
 	cfg.Project.CommitHash = commitHash
+
+	dbUsername, ok := os.LookupEnv("DB_USERNAME")
+	if ok {
+		cfg.Database.User = dbUsername
+	}
+	dbPassword, ok := os.LookupEnv("DB_PASSWORD")
+	if ok {
+		cfg.Database.Password = dbPassword
+	}
+	dbHost, ok := os.LookupEnv("DB_HOST")
+	if ok {
+		cfg.Database.Host = dbHost
+	}
+
+	cache, ok := os.LookupEnv("CACHE_ADDR")
+	if ok {
+		cfg.Redis.Addr = cache
+	}
+
+	kafkaBrokers, ok := os.LookupEnv("KAFKA_BROKERS")
+	if ok {
+		cfg.Kafka.Brokers = strings.Split(kafkaBrokers, ",")
+	}
+
+	schemaRegistry, ok := os.LookupEnv("SCHEMA_REGISTRY_URL")
+	if ok {
+		cfg.Kafka.SchemaRegistry = schemaRegistry
+	}
 
 	return nil
 }

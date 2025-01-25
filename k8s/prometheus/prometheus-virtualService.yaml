@@ -1,0 +1,17 @@
+# virtualservice определяем правила маршрутизации
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: prometheus
+  namespace: logistic-package
+spec:
+  hosts:
+    - "prometheus.k3s.dev.com"
+  gateways:
+    - "logistic-package/gateway"
+  http:
+    - route:
+        - destination:
+            host: prometheus.logistic-package.svc.cluster.local
+            port:
+              number: 9090

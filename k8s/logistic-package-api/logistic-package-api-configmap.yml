@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logistic-package-api
+  namespace: logistic-package
+data:
+  config.yml: "project:\r\n  name: Logistic Package API\r\n  debug: true\r\n  environment:
+    development\r\n  instance: \"logistic-package-api\"\r\n  startupTimeout: 60
+    \ # seconds\r\n  shutdownTimeout: 30  # seconds\r\n\r\ngrpc:\r\n  host: 0.0.0.0\r\n
+    \ port: 8082\r\n  maxConnectionIdle: 5 # Minutes\r\n  timeout: 5 # Seconds\r\n
+    \ maxConnectionAge: 5 # Minutes\r\n\r\nrest:\r\n  host: 0.0.0.0\r\n  port: 8080\r\n\r\nmetrics:\r\n
+    \ host: 0.0.0.0\r\n  port: 9100\r\n  path: /metrics\r\n\r\njaeger:\r\n  host:
+    \"jaeger\"\r\n  port: \":4317\"   # grpc 4317; http 6831\r\n\r\nstatus:\r\n  host:
+    0.0.0.0\r\n  port: 8000\r\n  livenessPath: /live\r\n  readinessPath: /ready\r\n
+    \ versionPath: /version\r\n\r\ndatabase:\r\n  host: postgres\r\n  port: 5432\r\n
+    \ user: logistic\r\n  password: P@$$w0rd\r\n  name: logistic_package_api\r\n  ssl:
+    disable\r\n  migrations: migrations\r\n  driver: pgx\r\n  queryTimeout: 5 # seconds
+    query timeout\r\n\r\nkafka:\r\n  topic: \"logistic-package-events\"\r\n  groupId:
+    \"logistic-package-api\"\r\n  flushTimeout: 5000 # milliseconds\r\n  brokers:\r\n
+    \   - \"kafka1:9091\"\r\n    - \"kafka2:9091\"\r\n    - \"kafka3:9091\"\r\n  schemaRegistry:
+    \ \"http://schemaregistry1:8081\"\r\n\r\noutbox:\r\n  batchSize: 100    # кол-во
+    событий получаемых за один запрос из БД\r\n  ticker: 10        # load events every
+    ticker seconds\r\n  producerCount: 20 # кол-во потоков, отправляющих в кафку\r\n\r\nredis:\r\n
+    \ addr: \"redis:6379\"\r\n  password: \"\"\r\n  db: 0\r\n  ttl: 600 # seconds\r\n
+    \ retryDuration: 10 # seconds"

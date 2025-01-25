@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus
+  namespace: logistic-package
+data:
+  prometheus.yml: "global:\r\n  scrape_interval:     10s  # интервал между запросами
+    prometheus\r\n  evaluation_interval: 10s  # интервал между вычислениями метрик\r\n\r\nscrape_configs:\r\n
+    \ - job_name: 'prometheus'\r\n    scrape_interval:     10s\r\n    static_configs:\r\n
+    \     - targets:\r\n        - logistic-package-api-headless:9100\r\n        - events-headless:9100\r\n
+    \       - tgbot-headless:9100\r\n        - retranslator-headless:9100\r\n"

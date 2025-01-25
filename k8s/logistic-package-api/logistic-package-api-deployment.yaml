@@ -1,0 +1,82 @@
+# Логирование в graylog?
+# Зависимости при запуске?
+# set instance name
+# service name from helm values
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logistic-package-api
+  namespace: logistic-package
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logistic-package-api
+      version: stable
+  template:
+    metadata:
+      labels:
+        app: logistic-package-api
+        version: stable
+    spec:
+      containers:
+        - name: logistic-package-api
+          image: arslanovdi/logistic_package_api:v0.1.7
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "25m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8082
+              protocol: TCP
+            - containerPort: 8000
+              protocol: TCP
+            - containerPort: 9100
+              protocol: TCP
+            - containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: "/live"
+              port: 8000
+            failureThreshold: 3       # количество последовательных неудачных проверок, чтобы считать контейнер мертвым...
+            initialDelaySeconds: 30   # секунд до начала проверки
+            periodSeconds: 60         # секунд между проверками
+            timeoutSeconds: 10        # секунд ожидания ответа, если превышено то проба неудачная
+            successThreshold: 1     # количество последовательных успешных проверок, чтобы подтвердить состояние
+            terminationGracePeriodSeconds: 10 # секунд ожидания после получения SIGTERM
+          readinessProbe:
+            httpGet:
+              path: "/ready"
+              port: 8000
+            failureThreshold: 3       # количество последовательных неудачных проверок, чтобы считать контейнер мертвым...
+            initialDelaySeconds: 30   # секунд до начала проверки
+            periodSeconds: 15         # секунд между проверками
+            timeoutSeconds: 10        # секунд ожидания ответа, если превышено то проба неудачная
+            successThreshold: 1       # количество последовательных успешных проверок, чтобы подтвердить состояние
+          env:
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: logistic.postgres.credentials.postgresql.acid.zalan.do
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: logistic.postgres.credentials.postgresql.acid.zalan.do
+                  key: password
+            - name: DB_HOST
+              value: "postgres.logistic-package.svc.cluster.local"
+            - name: CACHE_ADDR
+              value: "redis.logistic-package.svc.cluster.local:6379"
+          volumeMounts:
+            - name: config
+              mountPath: "/root/config"
+      volumes:
+        - name: config
+          configMap:
+            name: logistic-package-api

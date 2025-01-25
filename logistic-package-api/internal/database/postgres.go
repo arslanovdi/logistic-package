@@ -36,13 +36,13 @@ func NewPgxPool(ctx context.Context) (*pgxpool.Pool, error) {
 
 	cfg := config.GetConfigInstance()
 
-	dsn := fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=%v",
+	dsn := fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v", // sslmode=%v",
 		cfg.Database.Host,
 		cfg.Database.Port,
 		cfg.Database.User,
 		cfg.Database.Password,
 		cfg.Database.Name,
-		cfg.Database.Ssl,
+		// cfg.Database.Ssl,
 	)
 
 	// Эти параметры можно также задать в DSN

@@ -1,0 +1,17 @@
+# virtualservice определяем правила маршрутизации
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: kafka-ui
+  namespace: kafka
+spec:
+  hosts:
+    - "kafka-ui.k3s.dev.com"
+  gateways:
+    - "logistic-package/gateway"
+  http:
+    - route:
+        - destination:
+            host: kafka-ui.kafka.svc.cluster.local
+            port:
+              number: 8080

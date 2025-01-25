@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: events
+  namespace: logistic-package
+data:
+  config.yml: "project:\r\n  name: Logistic Package API\r\n  debug: false\r\n  environment:
+    development\r\n  instance: \"logistic-package-events\"\r\n  startupTimeout:
+    60  # seconds\r\n  shutdownTimeout: 30  # seconds\r\n\r\nmetrics:\r\n  host: 0.0.0.0\r\n
+    \ port: 9100\r\n  path: /metrics\r\n\r\njaeger:\r\n  host: \"jaeger\"\r\n  port:
+    \":4317\"   # grpc 4317; http 6831\r\n\r\nstatus:\r\n  host: 0.0.0.0\r\n  port:
+    8000\r\n  livenessPath: /live\r\n  readinessPath: /ready\r\n  versionPath: /version\r\n\r\nkafka:\r\n
+    \ topic: \"logistic-package-events\"\r\n  groupId: \"logistic-package-events\"\r\n
+    \ brokers:\r\n    - \"kafka1:9091\"\r\n    - \"kafka2:9091\"\r\n    - \"kafka3:9091\"\r\n
+    \ schemaRegistry:  \"http://schemaregistry1:8081\"\r\n"

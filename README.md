@@ -1,18 +1,32 @@
 ## Проект на базе курса для Go-мидлов Route256.
 
-[Структура проекта](https://excalidraw.com/#json=RP4dRHa6Dl6EXyjuhGjm0,clMlq2Sv7C2-38J6rDz24w)
+### Структура проекта
+https://excalidraw.com/#json=RP4dRHa6Dl6EXyjuhGjm0,clMlq2Sv7C2-38J6rDz24w
 
-[Prometheus](http://localhost:9090)
+### [kubernetes config](https://github.com/arslanovdi/logistic-package/tree/master/k8s)
 
-[Jaeger](http://localhost:16686)
 
-[Graylog](http://localhost:9000)
+### Prometheus
+http://localhost:9090
 
-[OpenSearch Dashboards](http://localhost:5601)
+http://prometheus.k3s.dev.com
 
-[KafkaUI](http://localhost:9001)
+### Jaeger
+http://localhost:16686
 
-[SchemaRegistry](http://localhost:8081)
+http://jaeger.k3s.dev.com
 
-[Grafana](http://localhost:3000)
+### Graylog
+http://localhost:9000
+
+### OpenSearch Dashboards
+http://localhost:5601
+
+### KafkaUI
+http://localhost:9001
+
+http://kafka-ui.k3s.dev.com/
+
+### Grafana
+http://localhost:3000
 

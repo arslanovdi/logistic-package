@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: jaeger
+  name: jaeger
+  namespace: logistic-package
+spec:
+  type: ClusterIP
+  ports:
+    - name: "tcp-jaeger-grpc"
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+    - name: 'tcp-jaeger-web'
+      port: 16686
+      targetPort: 16686
+      protocol: TCP
+  selector:
+    app: jaeger

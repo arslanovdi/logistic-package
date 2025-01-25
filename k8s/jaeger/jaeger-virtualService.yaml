@@ -1,0 +1,17 @@
+# virtualservice определяем правила маршрутизации
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: jaeger
+  namespace: logistic-package
+spec:
+  hosts:
+    - "jaeger.k3s.dev.com"
+  gateways:
+    - "logistic-package/gateway"
+  http:
+    - route:
+        - destination:
+            host: jaeger.logistic-package.svc.cluster.local
+            port:
+              number: 16686
