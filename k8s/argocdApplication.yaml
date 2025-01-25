@@ -5,9 +5,11 @@ metadata:
   namespace: argocd
 spec:
   destination:
-    server: https://192.168.2.50:6443
+    server: "https://192.168.2.50:6443"
   project: default
   source:
+    directory:
+      recurse: true
     path: k8s
     repoURL: https://github.com/arslanovdi/logistic-package
     targetRevision: LP-2--k8s-
