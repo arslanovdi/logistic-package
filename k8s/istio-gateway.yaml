@@ -32,3 +32,10 @@ spec:
         protocol: HTTP
       hosts:
         - "grafana.k3s.dev.com"
+    - port:
+        number: 80
+        name: graylog
+        protocol: HTTP
+      hosts:
+        - "graylog.k3s.dev.com"
+

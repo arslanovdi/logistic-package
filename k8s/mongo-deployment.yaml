@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo
+  namespace: logistic-package
+spec:
+  replicas: 1
+  minReadySeconds: 10
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:5.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "25m"
+          ports:
+            - containerPort: 27017
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /data/db
+              name: mongo-data
+            - mountPath: /data/configdb
+              name: mongo-configdb
+      volumes:
+        - name: mongo-data
+          persistentVolumeClaim:
+            claimName: mongo-data-pvc
+        - name: mongo-configdb
+          persistentVolumeClaim:
+            claimName: mongo-configdb-pvc

@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opensearch-node
+  namespace: logistic-package
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opensearch-node
+  template:
+    metadata:
+      labels:
+        app: opensearch-node
+    spec:
+      initContainers:
+        - name: fix-permissions
+          image: alpine:3.21
+          command: [ "sh", "-c", "chown -R 1000:1000 /usr/share/elasticsearch/data" ]
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: opensearch-data
+              mountPath: /usr/share/elasticsearch/data
+      containers:
+        - name: opensearch-node
+          image: opensearchproject/opensearch:latest
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "25m"
+          ports:
+            - containerPort: 9200
+              protocol: TCP
+            - containerPort: 9600
+              protocol: TCP
+            - containerPort: 9650
+              protocol: TCP
+          env:
+            - name: DISABLE_INSTALL_DEMO_CONFIG
+              value: "true"
+            - name: DISABLE_SECURITY_PLUGIN
+              value: "true"
+            - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+              value: ?PassW0rd?
+            - name: OPENSEARCH_JAVA_OPTS
+              value: -Xms512m -Xmx512m
+            - name: bootstrap.memory_lock
+              value: "true"
+            - name: discovery.type
+              value: single-node
+          volumeMounts:
+            - mountPath: /usr/share/opensearch/data
+              name: opensearch-data
+      volumes:
+        - name: opensearch-data
+          persistentVolumeClaim:
+            claimName: opensearch-data-pvc

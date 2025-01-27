@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: opensearch-node
+  namespace: logistic-package
+spec:
+  clusterIP: None
+  ports:
+    - name: "http-opensearch-node"
+      port: 9200
+      targetPort: 9200
+    - name: "http-web-service"
+      port: 9600
+      targetPort: 9600
+    - name: "tcp-rpc"
+      port: 9650
+      targetPort: 9650
+  selector:
+    app: opensearch-node
+
