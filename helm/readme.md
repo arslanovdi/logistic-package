@@ -6,6 +6,7 @@
 - указать в файле `argocdApplication.yaml` адрес k8s кластера
 
 strimzi должен быть установлен в namespace `kafka`
+
 fluentbit должен быть установлен в namespace `observability`
 
 После развертывания нужно перезапустить поды fluentbit и добавть gelf input в graylog порт 12201 tcp.

@@ -1,7 +1,3 @@
-# Логирование в graylog?
-# Зависимости при запуске?
-# set instance name
-# service name from helm values
 apiVersion: apps/v1
 kind: Deployment
 metadata:

@@ -1,4 +1,3 @@
-# Шлюз Istio
 apiVersion: networking.istio.io/v1
 kind: Gateway
 metadata:
