@@ -7,7 +7,10 @@ scrape_configs:
     scrape_interval:     10s
     static_configs:
       - targets:
-        - logistic-package-api:9100
-        - events:9100
-        - telegram_bot:9100
-        - retranslator:9100
+        - logistic-package-api-headless:9100 #logistic-package-api:9100
+        - events-headless:9100 #events:9100
+        - tgbot-headless:9100 #telegram_bot:9100
+        - retranslator-headless:9100 #retranslator:9100
+  - job_name: 'kube-state-metrics'
+    static_configs:
+      - targets: ['kube-state-metrics.default.svc.cluster.local:8080']

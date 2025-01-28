@@ -1,0 +1,17 @@
+# virtualservice определяем правила маршрутизации
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: grafana
+  namespace: observability
+spec:
+  hosts:
+    - "grafana.k3s.dev.com"
+  gateways:
+    - "observability/gateway"
+  http:
+    - route:
+        - destination:
+            host: grafana.observability.svc.cluster.local
+            port:
+              number: 3000

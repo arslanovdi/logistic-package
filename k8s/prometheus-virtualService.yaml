@@ -1,0 +1,17 @@
+# virtualservice определяем правила маршрутизации
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: prometheus
+  namespace: observability
+spec:
+  hosts:
+    - "prometheus.k3s.dev.com"
+  gateways:
+    - "observability/gateway"
+  http:
+    - route:
+        - destination:
+            host: prometheus.observability.svc.cluster.local
+            port:
+              number: 9090

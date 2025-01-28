@@ -1,0 +1,18 @@
+# virtualservice определяем правила маршрутизации
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: graylog
+  namespace: observability
+spec:
+  hosts:
+    - "graylog.k3s.dev.com"
+  gateways:
+    - "observability/gateway"
+  http:
+    - route:
+        - destination:
+            host: graylog.observability.svc.cluster.local
+            port:
+              number: 9000
+

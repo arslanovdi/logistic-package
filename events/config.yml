@@ -2,7 +2,7 @@ project:
   name: Logistic Package API
   debug: false
   environment: development
-  instance: "logistic-package-events-1"
+  instance: "logistic-package-events"
   startupTimeout: 60  # seconds
   shutdownTimeout: 30  # seconds
 

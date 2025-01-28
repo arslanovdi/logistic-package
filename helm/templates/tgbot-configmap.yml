@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tgbot
+  namespace: logistic-package
+data:
+  config.yml: "project:\r\n    name: Logistic Package Telegram Bot\r\n    debug: true\r\n
+    \   environment: development\r\n    instance: \"logistic-package-telegram_bot\"\r\n
+    \   startupTimeout: 60  # seconds\r\n    shutdownTimeout: 30  # seconds\r\n\r\ngrpc:\r\n
+    \ host: logistic-package-api\r\n  port: 8082\r\n  ctxTimeout: 10s\r\n\r\njaeger:\r\n
+    \ host: \"jaeger\"\r\n  port: \":4317\" # grpc 4317; http 6831\r\n\r\ntelegram:\r\n
+    \ faker: true\r\n  timeout: 60 # seconds\r\n  token: 7012140868:AAHAkiK606qFalhnX7Cm3d8aDRTIw5m3NWw\r\n\r\nmetrics:\r\n
+    \ host: 0.0.0.0\r\n  port: 9100\r\n  path: /metrics\r\n\r\nstatus:\r\n  host:
+    0.0.0.0\r\n  port: 8000\r\n  livenessPath: /live\r\n  readinessPath: /ready\r\n
+    \ versionPath: /version"

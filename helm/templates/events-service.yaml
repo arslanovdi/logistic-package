@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: events
+  name: events-headless
+  namespace: logistic-package
+spec:
+  clusterIP: None
+  ports:
+    - name: "tcp-metrics"
+      port: 9100
+      targetPort: 9100
+      protocol: TCP
+    - name: "tcp-status"
+      port: 8000
+      targetPort: 8000
+      protocol: TCP
+  selector:
+    app: events

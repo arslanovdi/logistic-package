@@ -1,0 +1,25 @@
+# создание namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: logistic-package
+    labels:
+      istio-injection: enabled
+
+---
+
+# Лимиты контейнера в namespace logistic-package, по умолчанию.
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: logistic-package
+  namespace: logistic-package
+spec:
+  limits:
+    - defaultRequest:   # запрос по умолчанию
+        memory: "32Mi"
+        cpu: "250m"
+      default:          # лимит по умолчанию
+        memory: "512Mi"
+        cpu: "1000m"
+      type: Container

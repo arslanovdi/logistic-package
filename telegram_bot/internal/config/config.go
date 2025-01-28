@@ -108,5 +108,19 @@ func ReadConfigYML(filePath string) error {
 	cfg.Project.Version = version
 	cfg.Project.CommitHash = commitHash
 
+	grpcHost, ok := os.LookupEnv("GRPC_HOST")
+	if ok {
+		cfg.GRPC.Host = grpcHost
+	}
+	grpcPort, ok := os.LookupEnv("GRPC_PORT")
+	if ok {
+		cfg.GRPC.Port = grpcPort
+	}
+
+	jaegerHost, ok := os.LookupEnv("JAEGER_HOST")
+	if ok {
+		cfg.Jaeger.Host = jaegerHost
+	}
+
 	return nil
 }

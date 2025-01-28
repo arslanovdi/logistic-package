@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: logistic-package
+  namespace: argocd
+spec:
+  destination:
+    server: "https://192.168.2.50:6443"
+  project: default
+  source:
+    path: helm
+    repoURL: https://github.com/arslanovdi/logistic-package
+    targetRevision: master
+    helm:
+      valueFiles:
+        - values.yaml
+  syncPolicy:
+    automated:
+      prune: true       # Не удалять ресурсы при синхронизации
+      selfHeal: false   # Возвращать состояние, если оно было изменено.
+      allowEmpty: true  # Разрешать пустые ресурсы.

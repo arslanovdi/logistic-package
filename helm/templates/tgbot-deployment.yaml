@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tgbot
+  namespace: logistic-package
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tgbot
+  template:
+    metadata:
+      labels:
+        app: tgbot
+    spec:
+      containers:
+        - name: tgbot
+          image: "{{ .Values.tgbot.image.repository }}:{{ .Values.tgbot.image.tag  }}"
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "25m"
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+            - containerPort: 9100
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: "/live"
+              port: 8000
+            failureThreshold: 3       # количество последовательных неудачных проверок, чтобы считать контейнер мертвым...
+            initialDelaySeconds: 30   # секунд до начала проверки
+            periodSeconds: 60         # секунд между проверками
+            timeoutSeconds: 10        # секунд ожидания ответа, если превышено то проба неудачная
+            successThreshold: 1     # количество последовательных успешных проверок, чтобы подтвердить состояние
+            terminationGracePeriodSeconds: 10 # секунд ожидания после получения SIGTERM
+          readinessProbe:
+            httpGet:
+              path: "/ready"
+              port: 8000
+            failureThreshold: 3       # количество последовательных неудачных проверок, чтобы считать контейнер мертвым...
+            initialDelaySeconds: 30   # секунд до начала проверки
+            periodSeconds: 15         # секунд между проверками
+            timeoutSeconds: 10        # секунд ожидания ответа, если превышено то проба неудачная
+            successThreshold: 1       # количество последовательных успешных проверок, чтобы подтвердить состояние
+          env:
+            - name: JAEGER_HOST
+              value: "jaeger.observability.svc.cluster.local"
+          volumeMounts:
+            - name: config
+              mountPath: "/root/config"
+      volumes:
+        - name: config
+          configMap:
+            name: tgbot

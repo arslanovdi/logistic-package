@@ -2,7 +2,7 @@ project:
     name: Logistic Package Telegram Bot
     debug: false
     environment: development
-    instance: "logistic-package-telegram_bot-1"
+    instance: "logistic-package-telegram_bot"
     startupTimeout: 60  # seconds
     shutdownTimeout: 30  # seconds
 
