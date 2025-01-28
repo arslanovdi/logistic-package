@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: logistic-package-api
-          image: arslanovdi/logistic_package_api:v0.1.7
+          image: arslanovdi/logistic_package_api:v0.1.8
           resources:
             requests:
               memory: "32Mi"

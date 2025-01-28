@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: tgbot
-          image: arslanovdi/tgbot:v0.1.1
+          image: arslanovdi/tgbot:v0.1.2
           imagePullPolicy: Always
           resources:
             requests:

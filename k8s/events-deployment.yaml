@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: events
-          image: arslanovdi/events:v0.1.2
+          image: arslanovdi/events:v0.1.3
           imagePullPolicy: Always
           resources:
             requests:

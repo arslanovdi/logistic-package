@@ -4,8 +4,21 @@ metadata:
   name: prometheus
   namespace: observability
 data:
-  prometheus.yml: "global:\r\n  scrape_interval:     10s  # интервал между запросами
-    prometheus\r\n  evaluation_interval: 10s  # интервал между вычислениями метрик\r\n\r\nscrape_configs:\r\n
-    \ - job_name: 'prometheus'\r\n    scrape_interval:     10s\r\n    static_configs:\r\n
-    \     - targets:\r\n        - logistic-package-api-headless.logistic-package.svc.cluster.local:9100\r\n        - events-headless.logistic-package.svc.cluster.local:9100\r\n
-    \       - tgbot-headless.logistic-package.svc.cluster.local:9100\r\n        - retranslator-headless.logistic-package.svc.cluster.local:9100\r\n"
+  prometheus.yml: |
+    global:
+      scrape_interval: 10s  # интервал между запросами prometheus
+      evaluation_interval: 10s  # интервал между вычислениями метрик
+    scrape_configs:
+      - job_name: 'prometheus'
+        scrape_interval: 10s
+        static_configs:
+          - targets:
+            - logistic-package-api-headless.logistic-package.svc.cluster.local:9100
+            - events-headless.logistic-package.svc.cluster.local:9100
+            - tgbot-headless.logistic-package.svc.cluster.local:9100
+            - retranslator-headless.logistic-package.svc.cluster.local:9100
+      - job_name: 'kube-state-metrics'
+        scrape_interval: 10s
+        static_configs:
+          - targets:
+            - kube-state-metrics.default.svc.cluster.local:8080
