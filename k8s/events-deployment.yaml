@@ -59,6 +59,8 @@ spec:
               value: "kafka-cluster-kafka-brokers.kafka.svc.cluster.local:9092"
             - name: SCHEMA_REGISTRY_URL
               value: "http://schemaregistry.kafka.svc.cluster.local:8081"
+            - name: JAEGER_HOST
+              value: "jaeger.observability.svc.cluster.local"
           volumeMounts:
             - name: config
               mountPath: "/root/config"

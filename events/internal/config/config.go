@@ -116,5 +116,10 @@ func ReadConfigYML(filePath string) error {
 		cfg.Kafka.SchemaRegistry = schemaRegistry
 	}
 
+	jaegerHost, ok := os.LookupEnv("JAEGER_HOST")
+	if ok {
+		cfg.Jaeger.Host = jaegerHost
+	}
+
 	return nil
 }

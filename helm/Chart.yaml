@@ -1,0 +1,6 @@
+apiVersion: v2
+name: logistic-package-helm
+description: Проект на базе курса Go middle Route256
+type: application
+version: 0.0.1
+

@@ -1,42 +1,32 @@
-# Логирование в graylog?
-# Зависимости при запуске?
-# set instance name
-# service name from helm values
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: logistic-package-api
+  name: retranslator
   namespace: logistic-package
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: logistic-package-api
+      app: retranslator
       version: stable
   template:
     metadata:
       labels:
-        app: logistic-package-api
+        app: retranslator
         version: stable
     spec:
       containers:
-        - name: logistic-package-api
-          image: arslanovdi/logistic_package_api:v0.1.7
+        - name: retranslator
+          image: "{{ .Values.retranslator.image.repository }}:{{ .Values.retranslator.image.tag  }}"
+          imagePullPolicy: Always
           resources:
             requests:
               memory: "32Mi"
               cpu: "25m"
-            limits:
-              memory: "128Mi"
-              cpu: "500m"
           ports:
-            - containerPort: 8082
-              protocol: TCP
             - containerPort: 8000
               protocol: TCP
             - containerPort: 9100
-              protocol: TCP
-            - containerPort: 8080
               protocol: TCP
           livenessProbe:
             httpGet:
@@ -70,8 +60,10 @@ spec:
                   key: password
             - name: DB_HOST
               value: "postgres.logistic-package.svc.cluster.local"
-            - name: CACHE_ADDR
-              value: "redis.logistic-package.svc.cluster.local:6379"
+            - name: KAFKA_BROKERS
+              value: "kafka-cluster-kafka-brokers.kafka.svc.cluster.local:9092"
+            - name: SCHEMA_REGISTRY_URL
+              value: "http://schemaregistry.kafka.svc.cluster.local:8081"
             - name: JAEGER_HOST
               value: "jaeger.observability.svc.cluster.local"
           volumeMounts:

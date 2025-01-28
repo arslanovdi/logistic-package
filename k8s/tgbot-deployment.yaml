@@ -49,6 +49,9 @@ spec:
             periodSeconds: 15         # секунд между проверками
             timeoutSeconds: 10        # секунд ожидания ответа, если превышено то проба неудачная
             successThreshold: 1       # количество последовательных успешных проверок, чтобы подтвердить состояние
+          env:
+            - name: JAEGER_HOST
+              value: "jaeger.observability.svc.cluster.local"
           volumeMounts:
             - name: config
               mountPath: "/root/config"

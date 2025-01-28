@@ -1,0 +1,17 @@
+# Шлюз Istio
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: gateway
+  namespace: kafka
+spec:
+  selector:
+    istio: ingressgateway   # use istio default ingress gateway
+  servers:
+    - port:
+        number: 80
+        name: kafka-ui
+        protocol: HTTP
+      hosts:
+        - "kafka-ui.k3s.dev.com"
+

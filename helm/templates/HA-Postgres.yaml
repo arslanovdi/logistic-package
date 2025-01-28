@@ -1,0 +1,27 @@
+# ServiceAccount logistic-package ???
+apiVersion: acid.zalan.do/v1
+kind: postgresql
+metadata:
+  labels:
+    team: acid  # id команды
+  name: postgres
+  namespace: logistic-package
+spec:
+  numberOfInstances: 2
+  postgresql:
+    version: '17'
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 500Mi
+    requests:
+      cpu: 100m
+      memory: 32Mi
+  teamId: acid
+  users:
+    logistic: []  # database owner
+  databases:
+    logistic_package_api: logistic  # database_name -> owner
+  volume:
+    size: 1Gi
+    storageClass: longhorn
