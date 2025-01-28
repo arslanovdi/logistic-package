@@ -3,8 +3,6 @@ kind: Service
 metadata:
   name: redis
   namespace: logistic-package
-  labels:
-    app: redis
 spec:
   type: ClusterIP
   selector:

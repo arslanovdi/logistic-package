@@ -8,7 +8,7 @@ spec:
   hosts:
     - "kafka-ui.k3s.dev.com"
   gateways:
-    - "logistic-package/gateway"
+    - "kafka/gateway"
   http:
     - route:
         - destination:

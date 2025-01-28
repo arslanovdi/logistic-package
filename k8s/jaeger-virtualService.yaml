@@ -3,15 +3,15 @@ apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
   name: jaeger
-  namespace: logistic-package
+  namespace: observability
 spec:
   hosts:
     - "jaeger.k3s.dev.com"
   gateways:
-    - "logistic-package/gateway"
+    - "observability/gateway"
   http:
     - route:
         - destination:
-            host: jaeger.logistic-package.svc.cluster.local
+            host: jaeger.observability.svc.cluster.local
             port:
               number: 16686

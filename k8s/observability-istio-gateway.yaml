@@ -3,7 +3,7 @@ apiVersion: networking.istio.io/v1
 kind: Gateway
 metadata:
   name: gateway
-  namespace: logistic-package
+  namespace: observability
 spec:
   selector:
     istio: ingressgateway   # use istio default ingress gateway
@@ -20,12 +20,6 @@ spec:
         protocol: HTTP
       hosts:
         - "prometheus.k3s.dev.com"
-    - port:
-        number: 80
-        name: kafka-ui
-        protocol: HTTP
-      hosts:
-        - "kafka-ui.k3s.dev.com"
     - port:
         number: 80
         name: grafana

@@ -5,3 +5,6 @@
 - [zalando postgres-operator](https://github.com/zalando/postgres-operator)
 
 strimzi должен быть установлен в namespace `kafka`
+fluentbit должен быть установлен в namespace `observability`
+
+После развертывания нужно перезапустить поды fluentbit и добавть gelf input в graylog порт 12201 tcp.
