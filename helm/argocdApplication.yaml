@@ -10,7 +10,7 @@ spec:
   source:
     path: helm
     repoURL: https://github.com/arslanovdi/logistic-package
-    targetRevision: LP-2--k8s-
+    targetRevision: master
     helm:
       valueFiles:
         - values.yaml

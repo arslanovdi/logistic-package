@@ -10,7 +10,7 @@ spec:
   source:
     path: k8s
     repoURL: https://github.com/arslanovdi/logistic-package
-    targetRevision: LP-2--k8s-
+    targetRevision: master
   syncPolicy:
     automated:
       prune: true       # Не удалять ресурсы при синхронизации
