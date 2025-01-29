@@ -2,7 +2,7 @@ events:
   image:
     repository: arslanovdi/events
     tag: latest
-  replicas: 3
+  replicas: 5
 
 tgbot:
   image:
