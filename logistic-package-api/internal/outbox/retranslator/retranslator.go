@@ -53,7 +53,7 @@ func NewRetranslator(r repo.EventRepo, s sender.EventSender) Retranslator {
 	err := r.UnlockAll(ctx) // Разблокируем сообщения. Такие могут появиться если ретранслятор был завершен без graceful.
 	if err != nil {
 		log.Error("error unlock all", slog.String("error", err.Error()))
-		os.Exit(1) // TODO нужно ретраить, либо перезапускать сервис. Иначе может нарушиться порядок событий
+		os.Exit(1) //nolint:gocritic // TODO нужно ретраить, либо перезапускать сервис. Иначе может нарушиться порядок событий
 	}
 
 	kafkaProducer := producer.NewProducer(

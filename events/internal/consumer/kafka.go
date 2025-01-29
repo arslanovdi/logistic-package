@@ -1,3 +1,4 @@
+// Package consumer чтение событий из kafka
 package consumer
 
 import (
@@ -22,6 +23,7 @@ const (
 	readTimeout = 1 * time.Second
 )
 
+// KafkaConsumer - чтение из кафки
 type KafkaConsumer struct {
 	consumer     *kafka.Consumer
 	deserializer *jsonschema.Deserializer

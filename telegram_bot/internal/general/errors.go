@@ -1,3 +1,4 @@
+// Package general errors
 package general
 
 import "errors"
@@ -8,12 +9,16 @@ var (
 	// ErrNotFound пакет не найден
 	ErrNotFound = errors.New("not found")
 
+	// ErrGrpcError ошибка gRPC
 	ErrGrpcError = errors.New("grpc error")
 
+	// ErrDeadline превышен срок действия запроса
 	ErrDeadline = errors.New("request deadline exceeded")
 
+	// ErrInvalidArgument некорректные данные
 	ErrInvalidArgument = errors.New("invalid argument")
 
+	// ErrInternal внутренняя ошибка
 	ErrInternal = errors.New("internal error in logistic-package-api")
 )
 

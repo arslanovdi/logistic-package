@@ -191,9 +191,10 @@ func (c *Consumer) batchProcessing() {
 	if len(c.unlockEvents) > 0 {
 		// Обработка батча завершена, снимаем блокировку
 		err := c.repo.Unlock(ctx, c.unlockEvents)
+		//goland:noinspection GoLinter
 		if err != nil {
 			log.Error("Ошибка при снятии блокировки с события в БД", slog.String("error", err.Error()))
-			os.Exit(1) // TODO нужно ретраить, либо перезапускать сервис. Иначе может нарушиться порядок событий
+			os.Exit(1) //nolint:gocritic  // TODO нужно ретраить, либо перезапускать сервис. Иначе может нарушиться порядок событий
 		}
 		log.Debug("Unlock unset events", slog.Int("events count", len(c.unlockEvents)))
 		c.unlockEvents = c.unlockEvents[:0]

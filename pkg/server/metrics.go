@@ -1,4 +1,5 @@
-package server // Package server - http сервера
+// Package server - http серверы
+package server
 
 import (
 	"context"
@@ -17,6 +18,7 @@ type MetricsServer struct {
 	config *MetricsConfig
 }
 
+// MetricsConfig - конфигурация http сервера
 type MetricsConfig struct {
 	Host string
 	Port int

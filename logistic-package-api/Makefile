@@ -1,7 +1,7 @@
 export GO111MODULE=on
 
 PGV_VERSION:="v1.1.0"
-BUF_VERSION:="v1.47.2"
+BUF_VERSION:="v1.50.0"
 
 OS_NAME=$(shell uname -s)
 OS_ARCH=$(shell uname -m)

@@ -1,3 +1,4 @@
+// Package metrics - метрики prometheus
 package metrics
 
 import (

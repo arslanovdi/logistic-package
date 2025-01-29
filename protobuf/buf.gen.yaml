@@ -23,6 +23,7 @@ plugins:
     out: ../pkg/logistic-package-api
     opt:
       - lang=go
+      - paths=source_relative
     strategy: directory
 
   - name: openapiv2

@@ -12,7 +12,7 @@ version: v1
 #name: buf.build/acme/weather
 
 # deps are the module dependencies
-# deps:
+#deps:
 #   - buf.build/googleapis/googleapis
 #   - buf.build/envoyproxy/protoc-gen-validate
 
@@ -64,9 +64,9 @@ lint:
   # All directories and file paths are specified relative to the root directory.
   # The directory "." is not allowed - this is equivalent to ignoring
   # everything.
-  ignore:
-    - validate
-    - google
+#  ignore:
+#    - validate
+#    - google
 
   # ignore_only is the map from rule id or category to file or directory to
   # ignore.

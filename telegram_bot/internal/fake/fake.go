@@ -22,6 +22,7 @@ const (
 
 const listCount = 10 // Кол-во package выдаваемое за 1 раз
 
+// Faker - эмуляция пользователей telegram бота
 type Faker struct {
 	counter    uint64 // Счетчик созданных пакетов
 	pkgService *service.LogisticPackageService

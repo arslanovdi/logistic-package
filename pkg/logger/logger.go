@@ -1,4 +1,5 @@
-package logger // Package logger - provides logging functionality
+// Package logger - provides logging functionality
+package logger
 
 import (
 	"log/slog"

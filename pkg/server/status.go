@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	// ReadHeaderTimeout - таймаут чтения заголовка http
 	ReadHeaderTimeout = 5 * time.Second
 )
 

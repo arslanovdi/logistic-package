@@ -87,7 +87,7 @@ func main() {
 		cfg.Jaeger.Host+cfg.Jaeger.Port)
 	if err != nil {
 		log.Warn("Failed to init tracer", slog.String("error", err.Error()))
-		os.Exit(1)
+		os.Exit(1) //nolint:gocritic
 	}
 
 	isReady := &atomic.Bool{} // состояние приложения

@@ -1,3 +1,4 @@
+// Package process содержит логику обработки событий
 package process
 
 import (

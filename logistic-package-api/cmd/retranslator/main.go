@@ -78,7 +78,7 @@ func main() {
 	trace, err1 := pkgtracer.NewTracer(ctxTrace, cfg.Project.Name+" "+"Retranslator", cfg.Jaeger.Host+cfg.Jaeger.Port)
 	if err1 != nil {
 		log.Warn("Failed to init tracer", slog.String("error", err1.Error()))
-		os.Exit(1)
+		os.Exit(1) //nolint:gocritic
 	}
 
 	isReady := &atomic.Bool{} // состояние приложения

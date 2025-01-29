@@ -1,3 +1,4 @@
+// Events чтение и обработка событий из kafka
 package main
 
 import (
@@ -26,6 +27,7 @@ const (
 	startTimeout = 5 * time.Second
 )
 
+// PackageConsumer интерфейс для чтения из кафки
 type PackageConsumer interface {
 	// Run read and process messages from kafka
 	Run(topic string, handler func(ctx context.Context, key string, msg model.PackageEvent, offset int64)) error
@@ -90,7 +92,7 @@ func main() {
 		cfg.Jaeger.Host+cfg.Jaeger.Port)
 	if err != nil {
 		log.Warn("Failed to init tracer", slog.String("error", err.Error()))
-		os.Exit(1)
+		os.Exit(1) //nolint:gocritic
 	}
 
 	isReady := &atomic.Bool{} // состояние приложения

@@ -13,16 +13,21 @@ type EventType uint8
 type EventStatus uint8
 
 const (
-	_       EventType = iota
-	Created           // Created - события создания пакета
-	Updated           // Updated - события изменения пакета
-	Removed           // Removed - события удаления пакета
+	_ EventType = iota
+	// Created - события создания пакета
+	Created
+	// Updated - события изменения пакета
+	Updated
+	// Removed - события удаления пакета
+	Removed
 )
 
 const (
-	_        EventStatus = iota
-	Locked               // Locked - событие заблокировано (отправляется в кафку)
-	Unlocked             // Unlocked - событие разблокировано (находится в очереди для отправки в кафку)
+	_ EventStatus = iota
+	// Locked - событие заблокировано (отправляется в кафку)
+	Locked
+	// Unlocked - событие разблокировано (находится в очереди для отправки в кафку)
+	Unlocked
 )
 
 // PackageEvent структура события

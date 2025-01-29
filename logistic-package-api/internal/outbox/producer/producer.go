@@ -50,6 +50,7 @@ func NewProducer(
 	}
 }
 
+// Start запуск продюсера
 func (p *Producer) Start(topic string) {
 	log := slog.With("func", "producer.Start")
 

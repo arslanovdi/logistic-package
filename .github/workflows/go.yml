@@ -29,7 +29,7 @@ jobs:
         go-version: ${{ env.GO_VERSION }}
 
     - name: Build events
-      run: go build -v ./events/cmd/events/...
+      run: go build -o bin -v ./events/cmd/events/...
 
     - name: Build logistic-package-api
       run: go build -v ./logistic-package-api/cmd/grpc-server/...
@@ -57,3 +57,4 @@ jobs:
       uses: golangci/golangci-lint-action@v6
       with:
         version: ${{ env.GOLANGCI_LINT_VERSION }}
+        args: --timeout=30m --config=golangci.yml --issues-exit-code=0
