@@ -36,7 +36,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/retranslator
       - name: Build and push retranslator
-        id: push
+        id: pushRetranslator
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -51,7 +51,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/logistic_package_api
       - name: Build and push logistic-package-api
-        id: push
+        id: pushLogistic_package_api
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -66,7 +66,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/events
       - name: Build and push events
-        id: push
+        id: pushEvents
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -81,7 +81,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/tgbot
       - name: Build and push tgbot
-        id: push
+        id: pushTgbot
         uses: docker/build-push-action@v6
         with:
           context: .
