@@ -10,8 +10,6 @@ on:
 
 env:
   REGISTRY: arslanovdi
-  IMAGE_NAME: stateful-todo
-
 
 jobs:
   push_to_registry:
@@ -33,11 +31,10 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Extract metadata (tags, labels) for Docker
-        id: meta
+        id: metaRetranslator
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
+          images: ${{ env.REGISTRY }}/retranslator
       - name: Build and push retranslator
         id: push
         uses: docker/build-push-action@v6
@@ -45,9 +42,14 @@ jobs:
           context: .
           file: ./Dockerfile_retranslator
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.metaRetranslator.outputs.tags }}
+          labels: ${{ steps.metaRetranslator.outputs.labels }}
 
+      - name: Extract metadata (tags, labels) for Docker
+        id: metaLogistic_package_api
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/logistic_package_api
       - name: Build and push logistic-package-api
         id: push
         uses: docker/build-push-action@v6
@@ -55,9 +57,14 @@ jobs:
           context: .
           file: ./Dockerfile_logistic_package_api
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.metaLogistic_package_api.outputs.tags }}
+          labels: ${{ steps.metaLogistic_package_api.outputs.labels }}
 
+      - name: Extract metadata (tags, labels) for Docker
+        id: metaEvents
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/events
       - name: Build and push events
         id: push
         uses: docker/build-push-action@v6
@@ -65,9 +72,14 @@ jobs:
           context: .
           file: ./Dockerfile_events
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.metaEvents.outputs.tags }}
+          labels: ${{ steps.metaEvents.outputs.labels }}
 
+      - name: Extract metadata (tags, labels) for Docker
+        id: metatgbot
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/tgbot
       - name: Build and push tgbot
         id: push
         uses: docker/build-push-action@v6
@@ -75,5 +87,5 @@ jobs:
           context: .
           file: ./Dockerfile_tgbot
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.metatgbot.outputs.tags }}
+          labels: ${{ steps.metatgbot.outputs.labels }}
