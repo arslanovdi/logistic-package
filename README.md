@@ -1,12 +1,17 @@
 ## Проект на базе курса для Go-мидлов Route256.
 
 ### Структура проекта
-https://excalidraw.com/#json=RP4dRHa6Dl6EXyjuhGjm0,clMlq2Sv7C2-38J6rDz24w
+https://excalidraw.com/#json=u7c5zFT4OukRM3cTUoT82,qALLk6eK9uEJEt-gFc5jSg
 
 ### CD
 [k8s manifests](https://github.com/arslanovdi/logistic-package/tree/master/k8s)
 
 [k8s manifests with helm values](https://github.com/arslanovdi/logistic-package/tree/master/helm)
+
+### Swagger
+http://localhost:8080/swagger-ui/
+
+http://swagger.k3s.dev.com
 
 ### Prometheus
 http://localhost:9090

@@ -12,7 +12,8 @@ services:
     networks:
       - ompnw
     ports:
-      - "8082:8082"
+      - "8082:8082" # gRPC
+      - "8080:8080" # REST / swagger
     depends_on:
       postgres:
         condition: service_healthy  # ждем полного запуска Postgres

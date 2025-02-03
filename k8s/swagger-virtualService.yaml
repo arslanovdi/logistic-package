@@ -1,0 +1,24 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: swagger
+  namespace: logistic-package
+spec:
+  hosts:
+    - "swagger.k3s.dev.com"
+  gateways:
+    - "logistic-package/gateway"
+  http:
+    - name: "swagger"
+      match:
+        - uri:
+            prefix: "/swagger-ui"
+        - uri:
+            prefix: "/"
+      rewrite:
+        uri: "/swagger-ui"
+      route:
+        - destination:
+            host: logistic-package-api
+            port:
+              number: 8080
