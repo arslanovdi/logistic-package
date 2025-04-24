@@ -54,7 +54,6 @@ linters:
 #    - godox
 #    - gofmt
     - gofumpt
-#    - goheader
 #    - goimports
 #    - gomoddirectives
 #    - gomodguard
@@ -105,7 +104,6 @@ linters:
     - staticcheck
 #    - stylecheck
 #    - tagalign
-#    - tagliatelle
 #    - tenv
 #    - testableexamples
     - testifylint
@@ -172,7 +170,6 @@ linters:
     #- godox
     #- gofmt
     #- gofumpt
-    #- goheader
     #- goimports
     #- gomoddirectives
     #- gomodguard
@@ -222,7 +219,6 @@ linters:
     #- staticcheck
     #- stylecheck
     #- tagalign
-    #- tagliatelle
     #- tenv
     #- testableexamples
     #- testifylint
@@ -411,13 +407,13 @@ linters-settings:
     # Keywords for detecting duplicate words.
     # If this list is not empty, only the words defined in this list will be detected.
     # Default: []
-    keywords:
+    keywords: []
 #      - "the"
 #      - "and"
 #      - "a"
     # Keywords used to ignore detection.
     # Default: []
-    ignore:
+    ignore: []
 #      - "0C0C"
 
   errcheck:
@@ -533,13 +529,13 @@ linters-settings:
     # Regular expressions must match complete canonical struct package/name/structname.
     # If this list is empty, all structs are tested.
     # Default: []
-    include:
+    include: []
 #      - '.+\.Test'
 #      - 'example\.com/package\.ExampleStruct[\d]{1,2}'
     # List of regular expressions to exclude struct packages and their names from checks.
     # Regular expressions must match complete canonical struct package/name/structname.
     # Default: []
-    exclude:
+    exclude: []
  #     - '.+/cobra\.Command$'
 
   forbidigo:
@@ -1159,13 +1155,13 @@ linters-settings:
     # Run `GL_DEBUG=gocritic golangci-lint run --enable=gocritic` to see all tags and checks.
     # See https://github.com/go-critic/go-critic#usage -> section "Tags".
     # Default: []
-    enabled-tags:
+    enabled-tags: []
   #    - diagnostic
   #    - style
   #    - performance
   #    - experimental
   #    - opinionated
-    disabled-tags:
+    disabled-tags: []
   #    - diagnostic
   #    - style
   #    - performance
@@ -1320,45 +1316,6 @@ linters-settings:
     # Choose whether to use the extra rules.
     # Default: false
     extra-rules: false
-
-  goheader:
-    # Supports two types 'const` and `regexp`.
-    # Values can be used recursively.
-    # Default: {}
-    values:
-      const:
-        # Define here const type values in format k:v.
-        # For example:
-        COMPANY: MY COMPANY
-      regexp:
-        # Define here regexp type values.
-        # for example:
-        AUTHOR: .*@mycompany\.com
-    # The template use for checking.
-    # Default: ""
-    template: |-
-      # Put here copyright header template for source code files
-      # For example:
-      # Note: {{ YEAR }} is a builtin value that returns the year relative to the current machine time.
-      #
-      # {{ AUTHOR }} {{ COMPANY }} {{ YEAR }}
-      # SPDX-License-Identifier: Apache-2.0
-
-      # Licensed under the Apache License, Version 2.0 (the "License");
-      # you may not use this file except in compliance with the License.
-      # You may obtain a copy of the License at:
-
-      #   http://www.apache.org/licenses/LICENSE-2.0
-
-      # Unless required by applicable law or agreed to in writing, software
-      # distributed under the License is distributed on an "AS IS" BASIS,
-      # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-      # See the License for the specific language governing permissions and
-      # limitations under the License.
-    # As alternative of directive 'template', you may put the path to file with the template source.
-    # Useful if you need to load the template from a specific file.
-    # Default: ""
-    template-path: /path/to/my/template.tmpl
 
   goimports:
     # A comma-separated list of prefixes, which, if set, checks import paths
@@ -1980,7 +1937,7 @@ linters-settings:
       unused:
         # List of packages path to exclude from the check.
         # Default: []
-        exclude:
+        exclude: []
 #          - github.com/example/log
 
   importas:
@@ -2111,13 +2068,13 @@ linters-settings:
     # Typos to ignore.
     # Should be in lower case.
     # Default: []
-    ignore-words:
+    ignore-words: []
 #      - someword
     # Extra word corrections.
     # `typo` and `correction` should only contain letters.
     # The words are case-insensitive.
     # Default: []
-    extra-words:
+    extra-words: []
 #      - typo: "iff"
 #        correction: "if"
 #      - typo: "cancelation"
@@ -3338,98 +3295,6 @@ linters-settings:
     # Default: false
     strict: true
 
-  tagliatelle:
-    # Checks the struct tag name case.
-    case:
-      # Defines the association between tag name and case.
-      # Any struct tag name can be used.
-      # Supported string cases:
-      # - `camel`
-      # - `pascal`
-      # - `kebab`
-      # - `snake`
-      # - `upperSnake`
-      # - `goCamel`
-      # - `goPascal`
-      # - `goKebab`
-      # - `goSnake`
-      # - `upper`
-      # - `lower`
-      # - `header`
-      rules:
-        json: camel
-        yaml: camel
-        xml: camel
-        toml: camel
-        bson: camel
-        avro: snake
-        mapstructure: kebab
-        env: upperSnake
-        envconfig: upperSnake
-        whatever: snake
-      # Defines the association between tag name and case.
-      # Important: the `extended-rules` overrides `rules`.
-      # Default: empty
-      extended-rules:
-        json:
-          # Supported string cases:
-          # - `camel`
-          # - `pascal`
-          # - `kebab`
-          # - `snake`
-          # - `upperSnake`
-          # - `goCamel`
-          # - `goPascal`
-          # - `goKebab`
-          # - `goSnake`
-          # - `header`
-          # - `lower`
-          # - `header`
-          #
-          # Required
-          case: camel
-          # Adds 'AMQP', 'DB', 'GID', 'RTP', 'SIP', 'TS' to initialisms,
-          # and removes 'LHS', 'RHS' from initialisms.
-          # Default: false
-          extra-initialisms: true
-          # Defines initialism additions and overrides.
-          # Default: empty
-          initialism-overrides:
-            DB: true # add a new initialism
-            LHS: false # disable a default initialism.
-            # ...
-      # Uses the struct field name to check the name of the struct tag.
-      # Default: false
-      use-field-name: true
-      # The field names to ignore.
-      # Default: []
-      ignored-fields:
-        - Bar
-        - Foo
-      # Overrides the default/root configuration.
-      # Default: []
-      overrides:
-        - # The package path (uses `/` only as a separator).
-          # Required
-          pkg: foo/bar
-          # Default: empty or the same as the default/root configuration.
-          rules:
-            json: snake
-            xml: pascal
-          # Default: empty or the same as the default/root configuration.
-          extended-rules:
-          # Same options as the base `extended-rules`.
-          # Default: false (WARNING: it doesn't follow the default/root configuration)
-          use-field-name: true
-          # The field names to ignore.
-          # Default: [] or the same as the default/root configuration.
-          ignored-fields:
-            - Bar
-            - Foo
-          # Ignore the package (takes precedence over all other configurations).
-          # Default: false
-          ignore: true
-
   tenv:
     # The option `all` will run against whole test files (`_test.go`) regardless of method/function signatures.
     # Otherwise, only methods that take `*testing.T`, `*testing.B`, and `testing.TB` as arguments are checked.
@@ -4120,7 +3985,7 @@ run:
 
   # List of build tags, all linters use it.
   # Default: []
-  build-tags:
+  build-tags: []
 #    - mytag
 
   # If set, we pass it to "go list -mod={option}". From "go help modules":
@@ -4186,7 +4051,7 @@ severity:
   # Only affects out formats that support setting severity information.
   #
   # Default: []
-  rules:
+  rules: []
     #- linters:
     #    - dupl
     #  severity: info
