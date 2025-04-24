@@ -13,6 +13,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/arslanovdi/logistic-package/telegram_bot/internal/fake"
+
 	"github.com/arslanovdi/logistic-package/telegram_bot/internal/api/grpc"
 
 	"github.com/arslanovdi/logistic-package/pkg/logger"
@@ -20,7 +22,6 @@ import (
 	"github.com/arslanovdi/logistic-package/pkg/tracer"
 	routerpkg "github.com/arslanovdi/logistic-package/telegram_bot/internal/bot/router"
 	"github.com/arslanovdi/logistic-package/telegram_bot/internal/config"
-	"github.com/arslanovdi/logistic-package/telegram_bot/internal/fake"
 	"github.com/arslanovdi/logistic-package/telegram_bot/internal/service"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )

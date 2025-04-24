@@ -1,7 +1,7 @@
 export GO111MODULE=on
 
-PGV_VERSION:="v1.1.0"
-BUF_VERSION:="v1.50.0"
+PGV_VERSION:="v1.2.1"
+BUF_VERSION:="v1.53.0"
 
 OS_NAME=$(shell uname -s)
 OS_ARCH=$(shell uname -m)
@@ -28,10 +28,10 @@ generate-go: .generate-install-buf .generate-go
 
 .PHONY: deps-go
 deps-go:
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.35.2
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.6
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
-	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.24.0
-	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.24.0
+	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.26.3
+	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.26.3
 	go install github.com/envoyproxy/protoc-gen-validate@$(PGV_VERSION)
 
 .PHONY: build-go

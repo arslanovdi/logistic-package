@@ -1,6 +1,6 @@
 module github.com/arslanovdi/logistic-package
 
-go 1.23.3
+go 1.24.2
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
